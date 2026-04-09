@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <title>StonksSimulator - Market</title>
+  <link rel="stylesheet" href="css/common.css">
+  <link rel="stylesheet" href="css/market.css">
+</head>
+<body>
+
+<div id="header-mount"></div>
+
+<div class="container">
+
+  <h1>Доступные акции</h1>
+
+  <div class="top-row">
+    <div class="filters">
+      <button class="active" onclick="applyFilter('all', this)">Все</button>
+      <button onclick="applyFilter('gainers', this)">Лучшая динамика</button>
+      <button onclick="applyFilter('expensive', this)">Сначала дорогие</button>
+      <button onclick="applyFilter('cheap', this)">Сначала дешёвые</button>
+      <button onclick="applyFilter('az', this)">А → Я</button>
+      <button onclick="applyFilter('za', this)">Я → А</button>
+    </div>
+
+    <input class="search" placeholder="Поиск" id="search-input" oninput="handleSearch(this.value)" />
+  </div>
+
+  <div id="market-grid" class="grid"></div>
+  <div id="pagination" class="pagination"></div>
+
+</div>
+
+<script src="js/utils.js"></script>
+<script src="js/components.js"></script>
+<script src="js/moex.js"></script>
+<script src="js/chart.js"></script>
+<script>
+  document.getElementById('header-mount').outerHTML = renderHeader('market');
+
+  const moex = new MoexClient();
+  let allStocks = [];
+  let currentFilter = 'all';
+  let searchQuery = '';
+  let currentPage = 1;
+  const PAGE_SIZE = 20;
+
+  const FILTERS = {
+    all:       { sort: (a, b) => (b.VALTODAY || 0) - (a.VALTODAY || 0) },
+    gainers:   { sort: (a, b) => (b.LASTTOPREVPRICE || 0) - (a.LASTTOPREVPRICE || 0) },
+    expensive: { sort: (a, b) => b.LAST - a.LAST },
+    cheap:     { sort: (a, b) => a.LAST - b.LAST },
+    az:        { sort: (a, b) => (a.SHORTNAME || '').localeCompare(b.SHORTNAME || '', 'ru') },
+    za:        { sort: (a, b) => (b.SHORTNAME || '').localeCompare(a.SHORTNAME || '', 'ru') },
+  };
+
+  async function loadCharts(stocks) {
+    const { from, till } = weekRange();
+    for (const stock of stocks) {
+      const el = document.querySelector(`.market-chart[data-ticker="${stock.SECID}"]`);
+      if (!el) continue;
+      try {
+        const candles = await moex.getStockCandles(stock.SECID, 24, from, till);
+        const prices = candles.map(c => c.close).filter(Boolean);
+        if (prices.length >= 2) {
+          el.style.background = 'none';
+          renderChart(el, prices, { height: 60 });
+        }
+      } catch { /* skip on error */ }
+    }
+  }
+
+  function renderPagination(totalPages) {
+    document.getElementById('pagination').innerHTML =
+      buildPaginationHTML(currentPage, totalPages, 'goToPage');
+  }
+
+  function getFiltered() {
+    const q = searchQuery.toLowerCase();
+    let result = allStocks.filter(s =>
+      !q ||
+      (s.SHORTNAME || '').toLowerCase().includes(q) ||
+      (s.SECID || '').toLowerCase().includes(q)
+    );
+    return result.slice().sort(FILTERS[currentFilter].sort);
+  }
+
+  function renderStocks() {
+    const filtered = getFiltered();
+    const totalPages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
+    if (currentPage > totalPages) currentPage = 1;
+
+    const page = filtered.slice((currentPage - 1) * PAGE_SIZE, currentPage * PAGE_SIZE);
+
+    const grid = document.getElementById('market-grid');
+    grid.innerHTML = page.length
+      ? page.map(renderMarketCard).join('')
+      : '<div class="market-empty">Ничего не найдено</div>';
+
+    renderPagination(totalPages);
+    loadCharts(page);
+  }
+
+  function goToPage(page) {
+    const filtered = getFiltered();
+    const totalPages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
+    if (page < 1 || page > totalPages) return;
+    currentPage = page;
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+    renderStocks();
+  }
+
+  function applyFilter(key, btn) {
+    document.querySelectorAll('.filters button').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    currentFilter = key;
+    currentPage = 1;
+    renderStocks();
+  }
+
+  function handleSearch(value) {
+    searchQuery = value;
+    currentPage = 1;
+    renderStocks();
+  }
+
+  async function loadMarket() {
+    const grid = document.getElementById('market-grid');
+    grid.innerHTML = '<div class="market-loading">Загрузка данных...</div>';
+    try {
+      const { securities, marketdata } = await moex.getAllStocks();
+      allStocks = moex.merge(securities, marketdata).filter(s => s.LAST > 0);
+      renderStocks();
+    } catch (e) {
+      grid.innerHTML = '<div class="market-loading">Ошибка загрузки данных</div>';
+      console.error(e);
+    }
+  }
+
+  loadMarket();
+</script>
+
+<script type="module" src="js/auth.js"></script>
+
+</body>
+</html>
