@@ -1,0 +1,88 @@
+.container { padding:30px 40px; }
+
+h1 { margin-bottom:20px; }
+
+.filters { margin-bottom:20px; }
+
+.filters button {
+  margin:5px; padding:8px 12px; border:none;
+  border-radius:8px; background:#2a2a2a; color:#ccc; cursor:pointer;
+}
+
+.filters button.active { background:#3b82f6; color:#fff; }
+
+.top-row {
+  display:flex; justify-content:space-between; align-items:center;
+}
+
+.search {
+  padding:10px; border-radius:8px; border:1px solid #333;
+  background:#111; color:#fff;
+}
+
+.grid {
+  margin-top:20px;
+  display:grid;
+  grid-template-columns:repeat(4,1fr);
+  gap:15px;
+}
+
+.card {
+  background:#111; border-radius:12px; padding:15px;
+  border:1px solid #1f1f1f; cursor:pointer;
+}
+
+.row {
+  display:flex; justify-content:space-between; align-items:center;
+}
+
+.price { font-size:18px; margin:10px 0; }
+
+.green { color:#22c55e; }
+.red-text { color:#ef4444; }
+
+.market-chart {
+  height:60px;
+  background:linear-gradient(180deg, rgba(34,197,94,0.2), transparent);
+  border-radius:6px;
+  margin:10px 0;
+}
+
+.market-loading {
+  color:#888;
+  padding:40px 0;
+  grid-column:1/-1;
+}
+
+.market-empty {
+  color:#888;
+  padding:40px 0;
+  grid-column:1/-1;
+}
+
+.pagination {
+  display:flex; justify-content:center; align-items:center;
+  gap:6px; margin-top:30px; flex-wrap:wrap;
+}
+
+.page-btn {
+  min-width:36px; height:36px; padding:0 10px;
+  border:none; border-radius:8px;
+  background:#2a2a2a; color:#ccc; cursor:pointer; font-size:14px;
+}
+
+.page-btn:hover:not(:disabled) { background:#3a3a3a; }
+.page-btn.active { background:#3b82f6; color:#fff; }
+.page-btn:disabled { opacity:0.3; cursor:default; }
+
+.page-ellipsis { color:#555; padding:0 4px; }
+
+.buttons { display:flex; gap:8px; }
+
+.btn {
+  flex:1; padding:8px; border:none; border-radius:8px; cursor:pointer;
+}
+
+.buy { background:#22c55e; color:#fff; }
+.sell { background:#2a2a2a; color:#aaa; }
+.sell.active { background:#ef4444; color:#fff; }
