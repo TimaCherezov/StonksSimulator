@@ -1,24 +1,23 @@
 function esc(s) {
   return String(s)
-    .replace(/&/g, "&amp;")
-    .replace(/</g, "&lt;")
-    .replace(/>/g, "&gt;")
-    .replace(/"/g, "&quot;")
-    .replace(/'/g, "&#39;");
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
 }
 
 const NAV_LINKS = [
-  { label: "Главная", href: "index.html", key: "home" },
-  { label: "Торговля", href: "market.html", key: "market" },
-  { label: "Портфель", href: "portfolio.html", key: "portfolio" },
-  { label: "История", href: "history.html", key: "history" },
+  { label: 'Главная',  href: 'index.html',  key: 'home' },
+  { label: 'Торговля', href: 'market.html', key: 'market' },
+  { label: 'Портфель', href: 'portfolio.html', key: 'portfolio' },
+  { label: 'История',  href: 'history.html', key: 'history' },
 ];
 
 function renderHeader(activePage) {
-  const links = NAV_LINKS.map(
-    (l) =>
-      `<a ${l.key === activePage ? 'class="active"' : ""} href="${l.href}">${l.label}</a>`,
-  ).join("");
+  const links = NAV_LINKS.map(l =>
+    `<a ${l.key === activePage ? 'class="active"' : ''} href="${l.href}">${l.label}</a>`
+  ).join('');
 
   return `
     <header>
@@ -54,14 +53,12 @@ function renderSkeletonCard(index) {
     </div>`;
 }
 
+
 function renderHomeCard(stock) {
   const change = stock.LASTTOPREVPRICE || 0;
-  const changeClass = change >= 0 ? "green" : "red-text";
-  const changeSign = change >= 0 ? "+" : "";
-  const price = stock.LAST.toLocaleString("ru-RU", {
-    minimumFractionDigits: 2,
-    maximumFractionDigits: 2,
-  });
+  const changeClass = change >= 0 ? 'green' : 'red-text';
+  const changeSign = change >= 0 ? '+' : '';
+  const price = stock.LAST.toLocaleString('ru-RU', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 
   const safeTicker = encodeURIComponent(stock.SECID);
   return `
@@ -84,12 +81,9 @@ function renderHomeCard(stock) {
 
 function renderMarketCard(stock) {
   const change = stock.LASTTOPREVPRICE || 0;
-  const changeClass = change >= 0 ? "green" : "red-text";
-  const changeSign = change >= 0 ? "+" : "";
-  const price = stock.LAST.toLocaleString("ru-RU", {
-    minimumFractionDigits: 2,
-    maximumFractionDigits: 2,
-  });
+  const changeClass = change >= 0 ? 'green' : 'red-text';
+  const changeSign = change >= 0 ? '+' : '';
+  const price = stock.LAST.toLocaleString('ru-RU', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 
   const safeTicker = encodeURIComponent(stock.SECID);
   return `

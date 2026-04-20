@@ -1,0 +1,221 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <title>StonksSimulator - История</title>
+  <link rel="stylesheet" href="css/common.css">
+  <link rel="stylesheet" href="css/history.css">
+</head>
+<body>
+
+<div id="header-mount"></div>
+
+<div class="container">
+  <h1>История сделок</h1>
+  <div id="history-root"></div>
+</div>
+
+<script src="js/utils.js"></script>
+<script src="js/components.js"></script>
+<script src="js/api.js"></script>
+<script>
+  document.getElementById('header-mount').outerHTML = renderHeader('history');
+
+  // ── Состояние ──────────────────────────────────────────────────────────────
+  let allTxs     = [];
+  let filterType = 'all';  // all | buy | sell
+  let searchTicker = '';
+  let currentPage  = 1;
+  const PAGE_SIZE  = 25;
+
+  // fmtRub, fmtDate — из utils.js
+
+  // ── Фильтрация ─────────────────────────────────────────────────────────────
+  function getFiltered() {
+    const q = searchTicker.trim().toUpperCase();
+    return allTxs.filter(t => {
+      if (filterType !== 'all' && t.type !== filterType) return false;
+      if (q && !t.ticker.includes(q)) return false;
+      return true;
+    });
+  }
+
+  // ── Рендер ─────────────────────────────────────────────────────────────────
+  function renderSummary() {
+    const buys  = allTxs.filter(t => t.type === 'buy');
+    const sells = allTxs.filter(t => t.type === 'sell');
+    const totalBought = buys.reduce((s, t) => s + parseFloat(t.total_amount), 0);
+    const totalSold   = sells.reduce((s, t) => s + parseFloat(t.total_amount), 0);
+
+    const realized      = totalSold - totalBought;
+    const realizedClass = realized >= 0 ? 'green' : 'red';
+    const realizedSign  = realized >= 0 ? '+' : '';
+
+    return `
+      <div class="summary-grid">
+        <div class="summary-card">
+          <div class="summary-label">Всего сделок</div>
+          <div class="summary-value">${allTxs.length}</div>
+        </div>
+        <div class="summary-card">
+          <div class="summary-label">Покупок</div>
+          <div class="summary-value">${buys.length}</div>
+          <div class="muted">${fmtRub(totalBought)}</div>
+        </div>
+        <div class="summary-card">
+          <div class="summary-label">Продаж</div>
+          <div class="summary-value">${sells.length}</div>
+          <div class="muted">${fmtRub(totalSold)}</div>
+        </div>
+        <div class="summary-card">
+          <div class="summary-label">Реализованный P&amp;L</div>
+          <div class="summary-value ${realizedClass}">${realizedSign}${fmtRub(realized)}</div>
+        </div>
+      </div>`;
+  }
+
+  function renderPagination(totalPages) {
+    const inner = buildPaginationHTML(currentPage, totalPages, 'goToPage');
+    return inner ? `<div class="pagination">${inner}</div>` : '';
+  }
+
+  function renderTable() {
+    const filtered   = getFiltered();
+    const totalPages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
+    if (currentPage > totalPages) currentPage = 1;
+
+    const page = filtered.slice((currentPage - 1) * PAGE_SIZE, currentPage * PAGE_SIZE);
+
+    const rows = page.length
+      ? page.map(t => `
+        <tr>
+          <td class="muted">${fmtDate(t.created_at, true)}</td>
+          <td>
+            <span class="ticker-badge" onclick="filterByTicker('${t.ticker}')">${t.ticker}</span>
+          </td>
+          <td class="${t.type === 'buy' ? 'badge-buy' : 'badge-sell'}">
+            ${t.type === 'buy' ? 'Покупка' : 'Продажа'}
+          </td>
+          <td class="right">${t.quantity} шт.</td>
+          <td class="right">${fmtRub(t.price)}</td>
+          <td class="right">${fmtRub(t.total_amount)}</td>
+          <td class="right">
+            <a href="trade.html?ticker=${t.ticker}&mode=buy" style="color:#3b82f6;font-size:12px;text-decoration:none">Перейти →</a>
+          </td>
+        </tr>`).join('')
+      : `<tr><td colspan="7" class="td-empty">Нет сделок по заданным фильтрам</td></tr>`;
+
+    return `
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>Дата и время</th>
+              <th>Тикер</th>
+              <th>Тип</th>
+              <th class="right">Кол-во</th>
+              <th class="right">Цена</th>
+              <th class="right">Сумма</th>
+              <th></th>
+            </tr>
+          </thead>
+          <tbody>${rows}</tbody>
+        </table>
+      </div>
+      ${renderPagination(totalPages)}`;
+  }
+
+  function render() {
+    if (!allTxs.length) {
+      document.getElementById('history-root').innerHTML = `
+        <div class="table-wrap">
+          <table><tbody>
+            <tr><td class="td-empty">Сделок пока не было. <a href="market.html">Перейти на рынок →</a></td></tr>
+          </tbody></table>
+        </div>`;
+      return;
+    }
+
+    document.getElementById('history-root').innerHTML =
+      renderSummary() + renderControls() + renderTable();
+  }
+
+  function renderControls() {
+    const q = searchTicker;
+    return `
+      <div class="controls">
+        <div class="filters">
+          <button class="filter-btn ${filterType === 'all'  ? 'active' : ''}" onclick="setType('all')">Все</button>
+          <button class="filter-btn ${filterType === 'buy'  ? 'active' : ''}" onclick="setType('buy')">Покупки</button>
+          <button class="filter-btn ${filterType === 'sell' ? 'active' : ''}" onclick="setType('sell')">Продажи</button>
+        </div>
+        <input class="search" placeholder="Тикер" value="${q}"
+               oninput="handleSearch(this.value)" />
+      </div>`;
+  }
+
+  // ── Обработчики ────────────────────────────────────────────────────────────
+  function setType(type) {
+    filterType = type;
+    currentPage = 1;
+    render();
+  }
+
+  function handleSearch(value) {
+    searchTicker = value;
+    currentPage = 1;
+    render();
+  }
+
+  function filterByTicker(ticker) {
+    searchTicker = ticker;
+    currentPage = 1;
+    render();
+  }
+
+  function goToPage(page) {
+    const filtered   = getFiltered();
+    const totalPages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
+    if (page < 1 || page > totalPages) return;
+    currentPage = page;
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+    render();
+  }
+
+  // ── Загрузка данных ────────────────────────────────────────────────────────
+  document.addEventListener('app:userLogout', () => {
+    allTxs = [];
+    showLoginPrompt('history-root', 'Войдите в аккаунт, чтобы увидеть историю сделок');
+  });
+
+  document.addEventListener('app:userReady', async function () {
+    if (!window.supabase) return;
+    const user = await window.supabase.auth.getUser();
+    if (!user) {
+      showLoginPrompt('history-root', 'Войдите в аккаунт, чтобы увидеть историю сделок');
+      return;
+    }
+
+    document.getElementById('history-root').innerHTML = `
+      <div class="table-wrap">
+        <table><tbody><tr><td class="td-loading">Загрузка...</td></tr></tbody></table>
+      </div>`;
+
+    try {
+      const txs = await api.getTransactions();
+      allTxs = txs || [];
+      render();
+    } catch (e) {
+      document.getElementById('history-root').innerHTML = `
+        <div class="table-wrap">
+          <table><tbody><tr><td class="td-empty">Ошибка загрузки данных</td></tr></tbody></table>
+        </div>`;
+      console.error(e);
+    }
+  });
+</script>
+
+<script type="module" src="js/auth.js"></script>
+
+</body>
+</html>

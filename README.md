@@ -1,1 +1,1 @@
-# StonksSimulator
+# stonks-simulator
