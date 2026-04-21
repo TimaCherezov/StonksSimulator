@@ -2,7 +2,6 @@
 
 h1 { margin-bottom: 24px; }
 
-/* ── Summary ── */
 .summary-grid {
   display: grid;
   grid-template-columns: repeat(4, 1fr);
@@ -31,7 +30,6 @@ h1 { margin-bottom: 24px; }
   color: #fff;
 }
 
-/* ── Controls ── */
 .controls {
   display: flex;
   justify-content: space-between;
@@ -65,7 +63,6 @@ h1 { margin-bottom: 24px; }
   width: 200px;
 }
 
-/* ── Table ── */
 .table-wrap {
   background: #111;
   border: 1px solid #1f1f1f;
@@ -120,7 +117,6 @@ tbody tr:hover { background: #161616; }
 .red    { color: #ef4444; }
 .muted  { color: #666; font-size: 13px; }
 
-/* ── Pagination ── */
 .pagination {
   display: flex;
   justify-content: center;
@@ -141,7 +137,6 @@ tbody tr:hover { background: #161616; }
 .page-btn:disabled { opacity: 0.3; cursor: default; }
 .page-ellipsis { color: #555; padding: 0 4px; }
 
-/* ── Empty / login ── */
 .td-empty, .td-loading {
   text-align: center;
   color: #555;

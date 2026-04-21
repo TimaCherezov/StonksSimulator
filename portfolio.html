@@ -24,10 +24,6 @@
 
   const moex = new MoexClient();
 
-  // ── Форматирование ─────────────────────────────────────────────────────────
-  // fmtRub, fmtPct, fmtDate — из utils.js
-
-  // ── Рендер ─────────────────────────────────────────────────────────────────
   function renderSummary(balance, portfolioValue, pnl, totalAssets) {
     const pnlClass = pnl >= 0 ? 'green' : 'red';
     const pnlSign  = pnl >= 0 ? '+' : '';
@@ -166,7 +162,6 @@
       </div>`;
   }
 
-  // ── Загрузка данных ────────────────────────────────────────────────────────
   document.addEventListener('app:userReady', loadPortfolio);
   document.addEventListener('app:userLogout', () =>
     showLoginPrompt('portfolio-root', 'Войдите в аккаунт, чтобы увидеть свой портфель')
@@ -199,7 +194,6 @@
       const transactions  = txRes.value  || [];
       const profile       = profRes.value;
 
-      // Карта текущих цен и названий из MOEX (необязательно — если MOEX недоступен, покажем без цен)
       let stockMap = new Map();
       if (moexRes.status === 'fulfilled') {
         const moexData = moexRes.value;
@@ -210,7 +204,6 @@
         console.error('MOEX unavailable:', moexRes.reason);
       }
 
-      // Обогащаем позиции текущими ценами
       const enriched = positions.map(p => {
         const stock        = stockMap.get(p.ticker);
         const currentPrice = stock?.LAST || parseFloat(p.avg_buy_price);

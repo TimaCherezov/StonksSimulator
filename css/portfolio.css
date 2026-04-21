@@ -3,7 +3,6 @@
 h1 { margin-bottom: 24px; }
 h2 { margin: 32px 0 16px; font-size: 18px; }
 
-/* ── Summary cards ── */
 .summary-grid {
   display: grid;
   grid-template-columns: repeat(4, 1fr);
@@ -41,7 +40,6 @@ h2 { margin: 32px 0 16px; font-size: 18px; }
 .red    { color: #ef4444; }
 .muted  { color: #888; }
 
-/* ── Tables ── */
 .table-wrap {
   background: #111;
   border: 1px solid #1f1f1f;
@@ -96,18 +94,15 @@ tbody tr:hover { background: #161616; }
 .btn-buy  { background: #22c55e; color: #fff; }
 .btn-sell { background: #2a2a2a; color: #aaa; }
 
-/* ── Type badge ── */
 .badge-buy  { color: #22c55e; font-weight: 600; }
 .badge-sell { color: #ef4444; font-weight: 600; }
 
-/* ── Empty / loading states ── */
 .td-empty, .td-loading {
   text-align: center;
   color: #555;
   padding: 40px 0 !important;
 }
 
-/* ── Login prompt ── */
 .login-prompt {
   background: #111;
   border: 1px solid #1f1f1f;
