@@ -4,7 +4,6 @@ import { SUPABASE_URL, SUPABASE_ANON_KEY } from './config.js';
 supabase.init(SUPABASE_URL, SUPABASE_ANON_KEY);
 window.supabase = supabase;
 
-// ── Inject modals into DOM ──────────────────────────────────────────────────
 document.body.insertAdjacentHTML('beforeend', `
   <div id="login-modal" class="modal-overlay" style="display:none" onclick="closeLoginModal(event)">
     <div class="modal">
@@ -30,7 +29,6 @@ document.body.insertAdjacentHTML('beforeend', `
   </div>
 `);
 
-// ── Helpers ─────────────────────────────────────────────────────────────────
 function showProfile(name) {
   document.getElementById('login-btn').style.display    = 'none';
   document.getElementById('logout-btn').style.display   = 'block';
@@ -50,7 +48,6 @@ async function loadBalance() {
 
 window.refreshBalance = loadBalance;
 
-// ── Window functions (для onclick атрибутов) ────────────────────────────────
 window.openLoginModal     = () => document.getElementById('login-modal').style.display = 'flex';
 window.closeLoginModal    = (e) => { if (e.target.id === 'login-modal') document.getElementById('login-modal').style.display = 'none'; };
 window.closeRegisterModal = (e) => { if (e.target.id === 'register-modal') document.getElementById('register-modal').style.display = 'none'; };
@@ -128,7 +125,6 @@ window.handleLogout = async () => {
   document.dispatchEvent(new CustomEvent('app:userLogout'));
 };
 
-// ── Проверка сессии при загрузке ────────────────────────────────────────────
 const user = await supabase.auth.getUser();
 if (user) {
   showProfile(user.user_metadata?.username || user.email);

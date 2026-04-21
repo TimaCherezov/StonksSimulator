@@ -47,12 +47,12 @@
   const PAGE_SIZE = 20;
 
   const FILTERS = {
-    all:       { sort: (a, b) => (b.VALTODAY || 0) - (a.VALTODAY || 0) },
-    gainers:   { sort: (a, b) => (b.LASTTOPREVPRICE || 0) - (a.LASTTOPREVPRICE || 0) },
-    expensive: { sort: (a, b) => b.LAST - a.LAST },
-    cheap:     { sort: (a, b) => a.LAST - b.LAST },
-    az:        { sort: (a, b) => (a.SHORTNAME || '').localeCompare(b.SHORTNAME || '', 'ru') },
-    za:        { sort: (a, b) => (b.SHORTNAME || '').localeCompare(a.SHORTNAME || '', 'ru') },
+    all:       (a, b) => (b.VALTODAY || 0) - (a.VALTODAY || 0),
+    gainers:   (a, b) => (b.LASTTOPREVPRICE || 0) - (a.LASTTOPREVPRICE || 0),
+    expensive: (a, b) => b.LAST - a.LAST,
+    cheap:     (a, b) => a.LAST - b.LAST,
+    az:        (a, b) => (a.SHORTNAME || '').localeCompare(b.SHORTNAME || '', 'ru'),
+    za:        (a, b) => (b.SHORTNAME || '').localeCompare(a.SHORTNAME || '', 'ru'),
   };
 
   async function loadCharts(stocks) {
@@ -67,7 +67,7 @@
           el.style.background = 'none';
           renderChart(el, prices, { height: 60 });
         }
-      } catch { /* skip on error */ }
+      } catch { }
     }
   }
 
@@ -83,20 +83,24 @@
       (s.SHORTNAME || '').toLowerCase().includes(q) ||
       (s.SECID || '').toLowerCase().includes(q)
     );
-    return result.slice().sort(FILTERS[currentFilter].sort);
+    return result.slice().sort(FILTERS[currentFilter]);
   }
 
   function renderStocks() {
     const filtered = getFiltered();
     const totalPages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
-    if (currentPage > totalPages) currentPage = 1;
+    if (currentPage > totalPages) {
+      currentPage = 1;
+    }
 
     const page = filtered.slice((currentPage - 1) * PAGE_SIZE, currentPage * PAGE_SIZE);
 
     const grid = document.getElementById('market-grid');
-    grid.innerHTML = page.length
-      ? page.map(renderMarketCard).join('')
-      : '<div class="market-empty">Ничего не найдено</div>';
+    if (page.length) {
+      grid.innerHTML = page.map(renderMarketCard).join('');
+    } else {
+      grid.innerHTML = '<div class="market-empty">Ничего не найдено</div>';
+    }
 
     renderPagination(totalPages);
     loadCharts(page);

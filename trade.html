@@ -32,11 +32,8 @@
   const moex = new MoexClient();
   let stockPrice = 0;
   let mode = params.get('mode') === 'sell' ? 'sell' : 'buy';
-  let userPosition = null; // { quantity, avg_buy_price }
+  let userPosition = null;
 
-  // ── Auth события ───────────────────────────────────────────────────────────
-  // app:userReady — нужен когда пользователь входит через модалку ПОСЛЕ загрузки страницы
-  // (если сессия уже была — load() сам вызовет loadUserPosition() в конце)
   document.addEventListener('app:userReady', () => {
     if (document.getElementById('position-info')) loadUserPosition();
   });
@@ -45,7 +42,6 @@
     updatePositionDisplay();
   });
 
-  // ── Позиция пользователя ───────────────────────────────────────────────────
   async function loadUserPosition() {
     if (!window.supabase) return;
     try {
@@ -74,7 +70,6 @@
     }
   }
 
-  // ── UI helpers ─────────────────────────────────────────────────────────────
   function switchMode(newMode) {
     mode = newMode;
     document.getElementById('tab-buy').classList.toggle('tab-active', mode === 'buy');
@@ -103,7 +98,6 @@
     toastTimer = setTimeout(() => el.classList.remove('show'), 3000);
   }
 
-  // ── Торговые операции ──────────────────────────────────────────────────────
   async function confirmTrade() {
     if (!window.supabase) { showToast('Войдите в аккаунт для совершения сделок', 'error'); return; }
 
@@ -178,7 +172,6 @@
     await api.insertTransaction(userId, ticker, 'sell', qty, stockPrice, total);
   }
 
-  // ── Загрузка страницы ──────────────────────────────────────────────────────
   async function load() {
     try {
       const { security, marketdata } = await moex.getStock(ticker);
@@ -235,7 +228,6 @@
 
       if (mode === 'sell') switchMode('sell');
 
-      // Загрузка графика
       const { from, till } = weekRange();
       try {
         const candles = await moex.getStockCandles(ticker, 24, from, till);
@@ -249,7 +241,6 @@
         console.warn('chart load failed:', e);
       }
 
-      // Загрузка позиции (если пользователь уже авторизован)
       loadUserPosition();
 
     } catch (e) {

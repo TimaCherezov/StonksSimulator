@@ -21,16 +21,12 @@
 <script>
   document.getElementById('header-mount').outerHTML = renderHeader('history');
 
-  // ── Состояние ──────────────────────────────────────────────────────────────
   let allTxs     = [];
-  let filterType = 'all';  // all | buy | sell
+  let filterType = 'all';
   let searchTicker = '';
   let currentPage  = 1;
   const PAGE_SIZE  = 25;
 
-  // fmtRub, fmtDate — из utils.js
-
-  // ── Фильтрация ─────────────────────────────────────────────────────────────
   function getFiltered() {
     const q = searchTicker.trim().toUpperCase();
     return allTxs.filter(t => {
@@ -40,7 +36,6 @@
     });
   }
 
-  // ── Рендер ─────────────────────────────────────────────────────────────────
   function renderSummary() {
     const buys  = allTxs.filter(t => t.type === 'buy');
     const sells = allTxs.filter(t => t.type === 'sell');
@@ -154,7 +149,6 @@
       </div>`;
   }
 
-  // ── Обработчики ────────────────────────────────────────────────────────────
   function setType(type) {
     filterType = type;
     currentPage = 1;
@@ -182,7 +176,6 @@
     render();
   }
 
-  // ── Загрузка данных ────────────────────────────────────────────────────────
   document.addEventListener('app:userLogout', () => {
     allTxs = [];
     showLoginPrompt('history-root', 'Войдите в аккаунт, чтобы увидеть историю сделок');

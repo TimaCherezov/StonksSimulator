@@ -1,8 +1,3 @@
-/**
- * ISS MOEX API Client
- * Moscow Exchange Information & Statistical Service
- * https://iss.moex.com/iss/
- */
 class MoexClient {
   constructor(options = {}) {
     this.baseUrl = options.baseUrl || 'https://iss.moex.com/iss';
@@ -11,7 +6,6 @@ class MoexClient {
     this._cache = new Map();
   }
 
-  // ─── Internals ────────────────────────────────────────────────────────────
 
   _throttle() {
     this._queue = this._queue.then(() => new Promise(r => setTimeout(r, this.rateLimitMs)));
@@ -38,10 +32,6 @@ class MoexClient {
     return data;
   }
 
-  /**
-   * Converts ISS columnar format { columns: [...], data: [[...], ...] }
-   * into an array of plain objects.
-   */
   _toObjects(block) {
     if (!block) return [];
     const { columns, data } = block;
@@ -50,16 +40,6 @@ class MoexClient {
     );
   }
 
-  // ─── Securities ───────────────────────────────────────────────────────────
-
-  /**
-   * Get all securities for a board (with current market data).
-   * @param {string} engine   e.g. 'stock'
-   * @param {string} market   e.g. 'shares'
-   * @param {string} board    e.g. 'TQBR'
-   * @param {object} params   Optional: start, limit, iss.only, ...
-   * @returns {{ securities: object[], marketdata: object[] }}
-   */
   async getSecurities(engine, market, board, params = {}) {
     const raw = await this._fetch(
       `engines/${engine}/markets/${market}/boards/${board}/securities`,
@@ -71,14 +51,7 @@ class MoexClient {
     };
   }
 
-  /**
-   * Get reference + current quotes for a single instrument.
-   * @param {string} engine
-   * @param {string} market
-   * @param {string} board
-   * @param {string} ticker
-   * @returns {{ security: object, marketdata: object }}
-   */
+
   async getSecurity(engine, market, board, ticker, params = {}) {
     const raw = await this._fetch(
       `engines/${engine}/markets/${market}/boards/${board}/securities/${ticker}`,
@@ -90,17 +63,7 @@ class MoexClient {
     };
   }
 
-  // ─── History ──────────────────────────────────────────────────────────────
 
-  /**
-   * Get historical OHLCV data for a date range (one page).
-   * @param {string} engine
-   * @param {string} market
-   * @param {string} board
-   * @param {string} ticker
-   * @param {object} params   from, till (YYYY-MM-DD), start, limit
-   * @returns {object[]}
-   */
   async getHistory(engine, market, board, ticker, params = {}) {
     const raw = await this._fetch(
       `history/engines/${engine}/markets/${market}/boards/${board}/securities/${ticker}`,
@@ -109,15 +72,7 @@ class MoexClient {
     return this._toObjects(raw.history);
   }
 
-  /**
-   * Get ALL historical OHLCV data, automatically paginating.
-   * @param {string} engine
-   * @param {string} market
-   * @param {string} board
-   * @param {string} ticker
-   * @param {object} params   from, till (YYYY-MM-DD)
-   * @returns {object[]}
-   */
+
   async getFullHistory(engine, market, board, ticker, params = {}) {
     const pageSize = 100;
     const all = [];
@@ -136,17 +91,6 @@ class MoexClient {
     return all;
   }
 
-  // ─── Candles ──────────────────────────────────────────────────────────────
-
-  /**
-   * Get intraday / daily candlestick data.
-   * @param {string} engine
-   * @param {string} market
-   * @param {string} board
-   * @param {string} ticker
-   * @param {object} params   interval (1|10|60|24), from, till (YYYY-MM-DD)
-   * @returns {object[]}
-   */
   async getCandles(engine, market, board, ticker, params = {}) {
     const raw = await this._fetch(
       `engines/${engine}/markets/${market}/boards/${board}/securities/${ticker}/candles`,
@@ -155,16 +99,6 @@ class MoexClient {
     return this._toObjects(raw.candles);
   }
 
-  // ─── Order Book ───────────────────────────────────────────────────────────
-
-  /**
-   * Get current order book (depth of market).
-   * @param {string} engine
-   * @param {string} market
-   * @param {string} board
-   * @param {string} ticker
-   * @returns {{ bids: object[], asks: object[] }}
-   */
   async getOrderBook(engine, market, board, ticker) {
     const raw = await this._fetch(
       `engines/${engine}/markets/${market}/boards/${board}/securities/${ticker}/orderbook`
@@ -176,17 +110,6 @@ class MoexClient {
     };
   }
 
-  // ─── Trades ───────────────────────────────────────────────────────────────
-
-  /**
-   * Get recent trades for an instrument.
-   * @param {string} engine
-   * @param {string} market
-   * @param {string} board
-   * @param {string} ticker
-   * @param {object} params   limit, start
-   * @returns {object[]}
-   */
   async getTrades(engine, market, board, ticker, params = {}) {
     const raw = await this._fetch(
       `engines/${engine}/markets/${market}/boards/${board}/securities/${ticker}/trades`,
@@ -195,51 +118,40 @@ class MoexClient {
     return this._toObjects(raw.trades);
   }
 
-  // ─── Convenience Methods ──────────────────────────────────────────────────
-
-  /** Current quotes for a stock (TQBR board). */
   async getStock(ticker, params) {
     return this.getSecurity('stock', 'shares', 'TQBR', ticker, params);
   }
 
-  /** All stocks on TQBR with market data. */
   async getAllStocks(params) {
     return this.getSecurities('stock', 'shares', 'TQBR', params);
   }
 
-  /** Current quotes for a bond (TQCB = corporate, TQOB = OFZ). */
   async getBond(ticker, board = 'TQCB', params) {
     return this.getSecurity('stock', 'bonds', board, ticker, params);
   }
 
-  /** Current quotes for a currency pair (CETS board). */
   async getCurrency(ticker, params) {
     return this.getSecurity('currency', 'selt', 'CETS', ticker, params);
   }
 
-  /** Current quotes for a futures contract (RFUD board). */
   async getFutures(ticker, params) {
     return this.getSecurity('futures', 'forts', 'RFUD', ticker, params);
   }
 
-  /** Stock history (TQBR). Shortcut for getHistory. */
   async getStockHistory(ticker, from, till, params) {
     return this.getFullHistory('stock', 'shares', 'TQBR', ticker, { from, till, ...params });
   }
 
-  /** Intraday candles for a stock (TQBR). interval: 1 | 10 | 60 | 24 */
   async getStockCandles(ticker, interval = 60, from, till) {
     return this.getCandles('stock', 'shares', 'TQBR', ticker, { interval, from, till });
   }
 
-  /** Merge securities + marketdata arrays into one array by SECID. */
   merge(securities, marketdata) {
     const mdMap = new Map(marketdata.map(m => [m.SECID, m]));
     return securities.map(s => ({ ...s, ...mdMap.get(s.SECID) }));
   }
 }
 
-// Export for module environments or expose as global
 if (typeof module !== 'undefined' && module.exports) {
   module.exports = MoexClient;
 } else {

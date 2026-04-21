@@ -5,8 +5,13 @@ h1 { margin-bottom:20px; }
 .filters { margin-bottom:20px; }
 
 .filters button {
-  margin:5px; padding:8px 12px; border:none;
-  border-radius:8px; background:#2a2a2a; color:#ccc; cursor:pointer;
+  margin:5px;
+  padding:8px 12px;
+  border:none;
+  border-radius:8px;
+  background:#2a2a2a;
+  color:#ccc;
+  cursor:pointer;
 }
 
 .filters button.active { background:#3b82f6; color:#fff; }
@@ -16,8 +21,11 @@ h1 { margin-bottom:20px; }
 }
 
 .search {
-  padding:10px; border-radius:8px; border:1px solid #333;
-  background:#111; color:#fff;
+  padding:10px;
+  border-radius:8px;
+  border:1px solid #333;
+  background:#111;
+  color:#fff;
 }
 
 .grid {
@@ -28,15 +36,23 @@ h1 { margin-bottom:20px; }
 }
 
 .card {
-  background:#111; border-radius:12px; padding:15px;
-  border:1px solid #1f1f1f; cursor:pointer;
+  background:#111;
+  border-radius:12px;
+  padding:15px;
+  border:3px solid #1f1f1f;
+  cursor:pointer;
 }
 
 .row {
-  display:flex; justify-content:space-between; align-items:center;
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
 }
 
-.price { font-size:18px; margin:10px 0; }
+.price {
+  font-size:18px;
+  margin:10px 0;
+}
 
 .green { color:#22c55e; }
 .red-text { color:#ef4444; }
@@ -61,21 +77,34 @@ h1 { margin-bottom:20px; }
 }
 
 .pagination {
-  display:flex; justify-content:center; align-items:center;
-  gap:6px; margin-top:30px; flex-wrap:wrap;
+  display:flex;
+  justify-content:center;
+  align-items:center;
+  gap:6px;
+  margin-top:30px;
+  flex-wrap:wrap;
 }
 
 .page-btn {
-  min-width:36px; height:36px; padding:0 10px;
-  border:none; border-radius:8px;
-  background:#2a2a2a; color:#ccc; cursor:pointer; font-size:14px;
+  min-width:36px;
+  height:36px;
+  padding:0 10px;
+  border:none;
+  border-radius:8px;
+  background:#2a2a2a;
+  color:#ccc;
+  cursor:pointer;
+  font-size:14px;
 }
 
 .page-btn:hover:not(:disabled) { background:#3a3a3a; }
 .page-btn.active { background:#3b82f6; color:#fff; }
 .page-btn:disabled { opacity:0.3; cursor:default; }
 
-.page-ellipsis { color:#555; padding:0 4px; }
+.page-ellipsis {
+  color:#555;
+  padding:0 4px;
+}
 
 .buttons { display:flex; gap:8px; }
 

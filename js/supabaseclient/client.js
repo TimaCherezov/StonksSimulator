@@ -1,8 +1,3 @@
-/**
- * Supabase HTTP Client
- * Базовый слой: хранение сессии, заголовки, fetch с авто-рефрешем токена
- */
-
 const TOKEN_KEY   = 'sb_access_token';
 const REFRESH_KEY = 'sb_refresh_token';
 
@@ -44,7 +39,6 @@ async function request(path, options = {}, retry = true) {
     headers: { ...headers(), ...options.headers },
   });
 
-  // токен истёк — пробуем обновить и повторить запрос
   if (res.status === 401 && retry) {
     const refreshed = await tryRefresh();
     if (refreshed) return request(path, options, false);

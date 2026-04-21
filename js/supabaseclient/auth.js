@@ -1,8 +1,3 @@
-/**
- * Supabase Auth
- * signup, signin, signout, getUser, onAuthStateChange
- */
-
 import { request, saveSession, clearSession, getAccessToken } from './client.js';
 
 const _listeners = [];
@@ -24,8 +19,6 @@ async function signUp(email, password, username) {
   const data = await res.json();
   if (!res.ok) throw new Error(data.msg || data.error_description || 'Ошибка регистрации');
 
-  // Если email confirmation выключен — data содержит access_token + user
-  // Если включён — data это сам объект пользователя без токенов
   const user = data.user ?? data;
   saveSession(data);
   _notify('SIGNED_IN', user);
@@ -63,7 +56,6 @@ async function getUser() {
 
 function onAuthStateChange(callback) {
   _listeners.push(callback);
-  // возвращаем unsubscribe
   return () => {
     const i = _listeners.indexOf(callback);
     if (i !== -1) _listeners.splice(i, 1);

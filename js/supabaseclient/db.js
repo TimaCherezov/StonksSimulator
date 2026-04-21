@@ -1,13 +1,3 @@
-/**
- * Supabase DB — PostgREST query builder
- *
- * Использование:
- *   from('portfolio').select('*').eq('user_id', id).execute()
- *   from('transactions').insert({ ticker: 'SBER', ... }).execute()
- *   from('portfolio').update({ quantity: 10 }).eq('ticker', 'SBER').execute()
- *   from('portfolio').delete().eq('ticker', 'SBER').execute()
- */
-
 import { request } from './client.js';
 
 class QueryBuilder {

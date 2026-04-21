@@ -54,7 +54,7 @@
 
   const moex = new MoexClient();
   let allStocks = [];
-  let cachedPositions = null; // сохраняем позиции, чтобы пересчитать когда придут цены MOEX
+  let cachedPositions = null;
 
   const FILTERS = {
     turnover:  { label: 'Топ по обороту за день',  sort: (a, b) => (b.VALTODAY || 0) - (a.VALTODAY || 0) },
@@ -64,7 +64,6 @@
     cheap:     { label: 'Самые дешёвые акции',      sort: (a, b) => a.LAST - b.LAST },
   };
 
-  // ── Карточки баланса и портфеля ────────────────────────────────────────────
 
   function updatePortfolioCard(positions) {
     if (!positions || !positions.length) {
@@ -126,7 +125,6 @@
     document.getElementById('dashboard-pnl').textContent        = '';
   });
 
-  // ── Топ акций ──────────────────────────────────────────────────────────────
 
   async function loadCharts(stocks) {
     const { from, till } = weekRange();
@@ -171,7 +169,6 @@
       grid.innerHTML = initial.map(renderHomeCard).join('');
       loadCharts(initial);
 
-      // Пересчитываем портфель с реальными ценами (если позиции уже загружены)
       if (cachedPositions !== null) updatePortfolioCard(cachedPositions);
     } catch (e) {
       grid.innerHTML = '<div class="stock-loading">Ошибка загрузки данных</div>';

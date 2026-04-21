@@ -1,22 +1,10 @@
-/**
- * SVG Chart Module
- *
- * renderChart(container, prices, options)
- *
- * @param {HTMLElement|string} container  — элемент или CSS-селектор
- * @param {number[]}           prices     — массив цен
- * @param {object}             options
- *   @param {number}  options.height    — высота в px (default: 60)
- *   @param {string}  options.color     — цвет линии; 'auto' = зелёный/красный по тренду
- *   @param {boolean} options.dot       — показывать точку последней цены (default: true)
- */
 function renderChart(container, prices, options = {}) {
   if (typeof container === 'string') container = document.querySelector(container);
   if (!container || !prices || prices.length < 2) return;
 
-  const W = 200;                            // фиксированный viewBox (SVG масштабируется CSS)
+  const W = 200;
   const H = options.height ?? 60;
-  const PAD = 3;                            // отступ чтобы линия/точка не обрезались
+  const PAD = 3;
 
   const trend = prices[prices.length - 1] >= prices[0];
   const color = (!options.color || options.color === 'auto')
@@ -24,7 +12,6 @@ function renderChart(container, prices, options = {}) {
     : options.color;
   const showDot = options.dot !== false;
 
-  // ── Нормализация координат ──────────────────────────────────────────────
   const min = Math.min(...prices);
   const max = Math.max(...prices);
   const range = max - min || 1;
@@ -34,7 +21,6 @@ function renderChart(container, prices, options = {}) {
 
   const pts = prices.map((v, i) => ({ x: toX(i), y: toY(v) }));
 
-  // ── Сглаженный path (кубические безье) ─────────────────────────────────
   function buildPath(points) {
     let d = `M ${points[0].x} ${points[0].y}`;
     for (let i = 1; i < points.length; i++) {
@@ -48,10 +34,8 @@ function renderChart(container, prices, options = {}) {
   const last     = pts[pts.length - 1];
   const areaPath = `${linePath} L ${last.x} ${H - PAD} L ${pts[0].x} ${H - PAD} Z`;
 
-  // ── Уникальный id для градиента (несколько графиков на странице) ────────
   const gid = 'cg' + Math.random().toString(36).slice(2, 8);
 
-  // ── Рендер ──────────────────────────────────────────────────────────────
   container.innerHTML = `
     <svg viewBox="0 0 ${W} ${H}"
          preserveAspectRatio="none"
