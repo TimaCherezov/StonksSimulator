@@ -72,8 +72,13 @@
 
   function switchMode(newMode) {
     mode = newMode;
-    document.getElementById('tab-buy').classList.toggle('tab-active', mode === 'buy');
-    document.getElementById('tab-sell').classList.toggle('tab-active', mode === 'sell');
+    if (mode === 'buy') {
+      document.getElementById('tab-buy').classList.add('tab-active');
+      document.getElementById('tab-sell').classList.remove('tab-active');
+    } else {
+      document.getElementById('tab-buy').classList.remove('tab-active');
+      document.getElementById('tab-sell').classList.add('tab-active');
+    }
     document.getElementById('trade-title').textContent = mode === 'buy' ? 'Купить акции' : 'Продать акции';
     const btn = document.getElementById('confirm-btn');
     btn.textContent = mode === 'buy' ? 'Подтвердить покупку' : 'Подтвердить продажу';
@@ -99,13 +104,20 @@
   }
 
   async function confirmTrade() {
-    if (!window.supabase) { showToast('Войдите в аккаунт для совершения сделок', 'error'); return; }
+    if (!window.supabase) {
+      showToast('Войдите в аккаунт для совершения сделок', 'error'); return;
+    }
 
     const user = await window.supabase.auth.getUser();
-    if (!user) { window.openLoginModal(); return; }
+    if (!user) {
+      window.openLoginModal(); return;
+    }
 
     const qty = parseInt(document.getElementById('qty-input').value);
-    if (!qty || qty < 1) { showToast('Введите количество акций', 'error'); return; }
+    if (!qty || qty < 1) {
+      showToast('Введите количество акций', 'error');
+      return;
+    }
 
     const btn = document.getElementById('confirm-btn');
     btn.disabled = true;

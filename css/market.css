@@ -17,7 +17,9 @@ h1 { margin-bottom:20px; }
 .filters button.active { background:#3b82f6; color:#fff; }
 
 .top-row {
-  display:flex; justify-content:space-between; align-items:center;
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
 }
 
 .search {
