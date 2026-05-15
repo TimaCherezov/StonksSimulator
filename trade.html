@@ -88,7 +88,7 @@
   }
 
   function updateTotal() {
-    const qty   = parseInt(document.getElementById('qty-input').value) || 0;
+    const qty = parseInt(document.getElementById('qty-input').value) || 0;
     const total = qty * stockPrice;
     document.getElementById('trade-total').textContent =
       total.toLocaleString('ru-RU', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + ' ₽';

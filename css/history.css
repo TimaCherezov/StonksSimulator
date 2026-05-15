@@ -39,7 +39,69 @@ h1 { margin-bottom: 24px; }
   flex-wrap: wrap;
 }
 
-.filters { display: flex; gap: 8px; }
+.controls-range {
+  display: flex;
+  justify-content: flex-start;
+  flex-wrap: wrap;
+}
+
+.date-range-group,
+.date-range-inputs,
+.filters {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.date-range-group {
+  gap: 12px;
+}
+
+.date-range-inputs {
+  gap: 8px;
+}
+
+.filters {
+  gap: 8px;
+}
+
+/* label */
+.date-range-group label {
+  font-size: 13px;
+  color: #888;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+/* input */
+.date-input {
+  padding: 8px 12px;
+  border-radius: 8px;
+  border: 1px solid #333;
+  background: #111;
+  color: #fff;
+  font-size: 13px;
+  cursor: pointer;
+  transition: 0.2s;
+}
+
+.date-input:hover {
+  border-color: #555;
+  background: #1a1a1a;
+}
+
+.date-input.active {
+  border-color: #3b82f6;
+  background: #1a2a3a;
+}
+
+/* separator */
+.date-separator {
+  color: #666;
+  font-size: 14px;
+  font-weight: 600;
+}
 
 .filter-btn {
   padding: 7px 16px;

@@ -21,17 +21,52 @@
 <script>
   document.getElementById('header-mount').outerHTML = renderHeader('history');
 
-  let allTxs     = [];
-  let filterType = 'all';
+  let allTxs      = [];
+  let filterType  = 'all';
   let searchTicker = '';
-  let currentPage  = 1;
-  const PAGE_SIZE  = 25;
+  let currentPage = 1;
+  let dateFilter  = 'all';
+  let customDateFrom = '';
+  let customDateTo   = '';
+  const PAGE_SIZE = 25;
+
+  function getDateThreshold() {
+    const now = new Date();
+    switch(dateFilter) {
+      case 'today': {
+        return new Date(now.getFullYear(), now.getMonth(), now.getDate());
+      }
+      case 'week':
+        return new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+      case 'month':
+        return new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
+      case 'year':
+        return new Date(now.getTime() - 365 * 24 * 60 * 60 * 1000);
+      case 'custom':
+        return new Date(customDateFrom);
+      default:
+        return new Date(0);
+    }
+  }
+
+  function getDateCeiling() {
+    if (dateFilter === 'custom' && customDateTo) {
+      const toDate = new Date(customDateTo);
+      toDate.setDate(toDate.getDate() + 1);
+      return toDate;
+    }
+    return new Date();
+  }
 
   function getFiltered() {
     const q = searchTicker.trim().toUpperCase();
+    const threshold = getDateThreshold();
+    const ceiling = getDateCeiling();
     return allTxs.filter(t => {
       if (filterType !== 'all' && t.type !== filterType) return false;
       if (q && !t.ticker.includes(q)) return false;
+      const txDate = new Date(t.created_at);
+      if (txDate < threshold || txDate >= ceiling) return false;
       return true;
     });
   }
@@ -146,11 +181,85 @@
         </div>
         <input class="search" placeholder="Тикер" value="${q}"
                oninput="handleSearch(this.value)" />
+      </div>
+      <div class="controls">
+        <div class="filters">
+          <button class="filter-btn ${dateFilter === 'all'   ? 'active' : ''}" onclick="setDateFilter('all')">За всё время</button>
+          <button class="filter-btn ${dateFilter === 'today' ? 'active' : ''}" onclick="setDateFilter('today')">Сегодня</button>
+          <button class="filter-btn ${dateFilter === 'week'  ? 'active' : ''}" onclick="setDateFilter('week')">Последние 7 дней</button>
+          <button class="filter-btn ${dateFilter === 'month' ? 'active' : ''}" onclick="setDateFilter('month')">Последний месяц</button>
+          <button class="filter-btn ${dateFilter === 'year'  ? 'active' : ''}" onclick="setDateFilter('year')">Последний год</button>
+        </div>
+      </div>
+      <div class="controls controls-range">
+        <div class="date-range-group">
+          <label>Период</label>
+          <div class="date-range-inputs">
+            <input type="date" class="date-input ${dateFilter === 'custom' ? 'active' : ''}"
+                   value="${customDateFrom}"
+                   oninput="setCustomDateFrom(this.value)"
+                   placeholder="От">
+            <span class="date-separator">→</span>
+            <input type="date" class="date-input ${dateFilter === 'custom' ? 'active' : ''}"
+                   value="${customDateTo}"
+                   oninput="setCustomDateTo(this.value)"
+                   placeholder="До">
+            <button class="filter-btn ${dateFilter === 'custom' && customDateFrom ? 'active' : ''}"
+                    onclick="applyCustomDateFilter()"
+                    style="margin-left: 8px;">Применить</button>
+            ${dateFilter === 'custom' ? '<button class="filter-btn" onclick="clearCustomDateFilter()" style="margin-left: 4px; background: #8b5cf6;">Очистить</button>' : ''}
+          </div>
+        </div>
       </div>`;
   }
 
   function setType(type) {
     filterType = type;
+    currentPage = 1;
+    render();
+  }
+
+  function setDateFilter(period) {
+    dateFilter = period;
+    customDateFrom = '';
+    customDateTo = '';
+    currentPage = 1;
+    render();
+  }
+
+  function setCustomDateFrom(value) {
+    customDateFrom = value;
+  }
+
+  function setCustomDateTo(value) {
+    customDateTo = value;
+  }
+
+  function applyCustomDateFilter() {
+    if (!customDateFrom) {
+      alert('Пожалуйста, выберите дату начала периода');
+      return;
+    }
+
+    if (!customDateTo) {
+      alert('Пожалуйста, выберите дату конца периода');
+      return;
+    }
+
+    if (new Date(customDateFrom) > new Date(customDateTo)) {
+      alert('Дата начала не может быть позже даты конца');
+      return;
+    }
+
+    dateFilter = 'custom';
+    currentPage = 1;
+    render();
+  }
+
+  function clearCustomDateFilter() {
+    dateFilter = 'all';
+    customDateFrom = '';
+    customDateTo = '';
     currentPage = 1;
     render();
   }

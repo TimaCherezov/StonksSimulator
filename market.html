@@ -65,7 +65,8 @@
         const prices = candles.map(c => c.close).filter(Boolean);
         if (prices.length >= 2) {
           el.style.background = 'none';
-          renderChart(el, prices, { height: 60 });
+          renderC
+          hart(el, prices, { height: 60 });
         }
       } catch { }
     }
