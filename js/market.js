@@ -107,7 +107,6 @@ async function loadMarket() {
 }
 
 function setupEventListeners() {
-  // Обработчик для кнопок фильтров
   document.querySelectorAll('.filters button').forEach(btn => {
     btn.addEventListener('click', function() {
       const filterKey = this.dataset.filter;
