@@ -127,6 +127,10 @@ function setupEventListeners() {
 
 async function loadDashboardCharts() {
   try {
+    const user = await window.supabase.auth.getUser();
+    const userId = user?.id || user?.data?.user?.id || user?.user?.id;
+    if (!userId) return;
+
     const txRes = await api.getTransactions();
     const txs = txRes?.data || txRes || [];
 
@@ -159,17 +163,9 @@ async function loadDashboardCharts() {
       balancePoints.push(Math.max(0, runningBalance));
     }
 
-
-    // const snapRes = await api.getPortfolioSnapshots();
-    // const snapshots = snapRes?.data || snapRes || [];
-    //
-    // const portfolioPoints = snapshots.map(s => Number(s.value));
-    //
-    // if (portfolioPoints.length < 2) {
-    //   portfolioPoints.push(portfolioPoints[0] || 0);
-    // }
-    const portfolioPoints = [];
-
+    const snapRes = await api.getPortfolioSnapshots(userId);
+    const snapshots = snapRes?.data || snapRes || [];
+    const portfolioPoints = snapshots.map(s => Number(s.total_value)).filter(Number.isFinite);
 
     if (balancePoints.length >= 2) {
       const balanceChart = document.querySelector('.cards .card:first-child .chart');
@@ -192,6 +188,8 @@ async function loadDashboardCharts() {
     console.warn('Dashboard charts load failed:', e);
   }
 }
+
+
 function initHomePage() {
   const headerMount = document.getElementById('header-mount');
   headerMount.insertAdjacentHTML('beforebegin', renderHeader('home'));

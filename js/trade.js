@@ -310,20 +310,16 @@ async function savePortfolioSnapshot(userId) {
       api.getPortfolio()
     ]);
 
-    const stocksMap = new Map(allStocks.map(s => [s.SECID, s]));
-
-    let portfolioValue = 0;
-
-    for (const pos of positions || []) {
-      const stock = stocksMap.get(pos.ticker);
-      const price = stock?.LAST || pos.avg_buy_price || 0;
-
-      portfolioValue += price * pos.quantity;
-    }
+    const cashBalance = Number(profile?.balance ?? 0);
+    const portfolioValue = (positions || []).reduce((sum, pos) => {
+      const qty = Number(pos.quantity) || 0;
+      const avg = Number(pos.avg_buy_price) || 0;
+      return sum + avg * qty;
+    }, 0);
 
     await api.insertPortfolioSnapshot(userId, {
-      value: portfolioValue,
-      created_at: new Date().toISOString()
+      total_value: cashBalance + portfolioValue,
+      recorded_at: new Date().toISOString()
     });
 
   } catch (e) {
