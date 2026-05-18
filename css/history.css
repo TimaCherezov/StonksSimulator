@@ -179,26 +179,6 @@ tbody tr:hover { background: #161616; }
 .red    { color: #ef4444; }
 .muted  { color: #666; font-size: 13px; }
 
-.pagination {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  gap: 6px;
-  margin-top: 20px;
-  flex-wrap: wrap;
-}
-
-.page-btn {
-  min-width: 36px; height: 36px; padding: 0 10px;
-  border: none; border-radius: 8px;
-  background: #2a2a2a; color: #ccc; cursor: pointer; font-size: 14px;
-}
-
-.page-btn:hover:not(:disabled) { background: #3a3a3a; }
-.page-btn.active { background: #3b82f6; color: #fff; }
-.page-btn:disabled { opacity: 0.3; cursor: default; }
-.page-ellipsis { color: #555; padding: 0 4px; }
-
 .td-empty, .td-loading {
   text-align: center;
   color: #555;
