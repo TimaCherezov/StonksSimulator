@@ -68,25 +68,41 @@ function applyFilter(key, btn) {
   let result = filter ? allStocks.filter(filter) : allStocks;
   result = result.slice().sort(sort).slice(0, 9);
 
-  document.getElementById('stock-grid').innerHTML = result.map(renderHomeCard).join('');
+  const grid = document.getElementById('stock-grid');
+  grid.textContent = '';
+  result.forEach(stock => {
+    grid.insertAdjacentHTML('beforeend', renderHomeCard(stock));
+  });
+
   loadCharts(result);
 }
 
 
 async function loadTopStocks() {
   const grid = document.getElementById('stock-grid');
-  grid.innerHTML = Array.from({ length: 9 }, (_, i) => renderSkeletonCard(i)).join('');
+  grid.textContent = '';
+
+  Array.from({ length: 9 }, (_, i) => renderSkeletonCard(i)).forEach(html => {
+    grid.insertAdjacentHTML('beforeend', html);
+  });
+
   try {
     const { securities, marketdata } = await moex.getAllStocks();
     allStocks = moex.merge(securities, marketdata).filter(s => s.LAST > 0 && s.VALTODAY > 0);
 
     const initial = allStocks.slice().sort(FILTERS.turnover.sort).slice(0, 9);
-    grid.innerHTML = initial.map(renderHomeCard).join('');
+
+    grid.textContent = '';
+    initial.forEach(stock => {
+      grid.insertAdjacentHTML('beforeend', renderHomeCard(stock));
+    });
+
     loadCharts(initial);
 
     if (cachedPositions !== null) updatePortfolioCard(cachedPositions);
   } catch (e) {
-    grid.innerHTML = '<div class="stock-loading">Ошибка загрузки данных</div>';
+    grid.textContent = '';
+    grid.insertAdjacentHTML('beforeend', '<div class="stock-loading">Ошибка загрузки данных</div>');
     console.error(e);
   }
 }
@@ -99,11 +115,91 @@ function setupEventListeners() {
       applyFilter(filterKey, this);
     });
   });
+
+  const portfolioCard = document.getElementById('portfolio-card');
+  if (portfolioCard) {
+    portfolioCard.addEventListener('click', () => {
+      location.href = 'portfolio.html';
+    });
+  }
+}
+
+
+async function loadDashboardCharts() {
+  try {
+    const txRes = await api.getTransactions();
+    const txs = txRes?.data || txRes || [];
+
+    if (!txs || !txs.length) return;
+
+    txs.sort((a, b) => new Date(a.created_at) - new Date(b.created_at));
+
+    const profileRes = await api.getProfile();
+    const profile = profileRes?.data || profileRes;
+    const currentBalance = profile?.balance || 100000;
+
+    let initialBalance = currentBalance;
+    for (const tx of txs) {
+      if (tx.type === 'buy') {
+        initialBalance += parseFloat(tx.total_amount);
+      } else if (tx.type === 'sell') {
+        initialBalance -= parseFloat(tx.total_amount);
+      }
+    }
+
+    const balancePoints = [initialBalance];
+    let runningBalance = initialBalance;
+
+    for (const tx of txs) {
+      if (tx.type === 'buy') {
+        runningBalance -= parseFloat(tx.total_amount);
+      } else if (tx.type === 'sell') {
+        runningBalance += parseFloat(tx.total_amount);
+      }
+      balancePoints.push(Math.max(0, runningBalance));
+    }
+
+    const portfolioPoints = [0];
+    let portfolioValue = 0;
+
+    for (const tx of txs) {
+      const stock = allStocks.find(s => s.SECID === tx.ticker);
+      const currentPrice = stock?.LAST || parseFloat(tx.price);
+
+      if (tx.type === 'buy') {
+        portfolioValue += tx.quantity * currentPrice;
+      } else if (tx.type === 'sell') {
+        portfolioValue -= tx.quantity * currentPrice;
+      }
+      portfolioPoints.push(Math.max(0, portfolioValue));
+    }
+
+    if (balancePoints.length >= 2) {
+      const balanceChart = document.querySelector('.cards .card:first-child .chart');
+      if (balanceChart) {
+        balanceChart.style.background = 'none';
+        balanceChart.classList.remove('sk');
+        renderChart(balanceChart, balancePoints, { height: 80 });
+      }
+    }
+
+    if (portfolioPoints.length >= 2) {
+      const portfolioChart = document.querySelector('.cards .card:nth-child(2) .chart');
+      if (portfolioChart) {
+        portfolioChart.style.background = 'none';
+        portfolioChart.classList.remove('sk');
+        renderChart(portfolioChart, portfolioPoints, { height: 80 });
+      }
+    }
+  } catch (e) {
+    console.warn('Dashboard charts load failed:', e);
+  }
 }
 
 function initHomePage() {
   const headerMount = document.getElementById('header-mount');
-  headerMount.outerHTML = renderHeader('home');
+  headerMount.insertAdjacentHTML('beforebegin', renderHeader('home'));
+  headerMount.remove();
 
   document.addEventListener('app:userReady', async function () {
     if (!window.supabase) return;
@@ -123,6 +219,8 @@ function initHomePage() {
 
       cachedPositions = positions || [];
       updatePortfolioCard(cachedPositions);
+
+      await loadDashboardCharts();
     } catch (e) {
       console.error(e);
     }
