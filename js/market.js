@@ -32,7 +32,8 @@ async function loadCharts(stocks) {
 
 function renderPagination(totalPages) {
   const paginationEl = document.getElementById('pagination');
-  paginationEl.innerHTML = buildPaginationHTML(currentPage, totalPages, 'goToPage');
+  paginationEl.textContent = '';
+  paginationEl.insertAdjacentHTML('beforeend', buildPaginationHTML(currentPage, totalPages, 'goToPage'));
 }
 
 function getFiltered() {
@@ -55,10 +56,14 @@ function renderStocks() {
   const page = filtered.slice((currentPage - 1) * PAGE_SIZE, currentPage * PAGE_SIZE);
 
   const grid = document.getElementById('market-grid');
+  grid.textContent = '';
+
   if (page.length) {
-    grid.innerHTML = page.map(renderMarketCard).join('');
+    page.forEach(stock => {
+      grid.insertAdjacentHTML('beforeend', renderMarketCard(stock));
+    });
   } else {
-    grid.innerHTML = '<div class="market-empty">Ничего не найдено</div>';
+    grid.insertAdjacentHTML('beforeend', '<div class="market-empty">Ничего не найдено</div>');
   }
 
   renderPagination(totalPages);
@@ -121,7 +126,9 @@ function setupEventListeners() {
 
 function initMarketPage() {
   const headerMount = document.getElementById('header-mount');
-  headerMount.outerHTML = renderHeader('market');
+  headerMount.insertAdjacentHTML('beforebegin', renderHeader('market'));
+  headerMount.remove();
+
   setupEventListeners();
   loadMarket();
 }

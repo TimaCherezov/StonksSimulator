@@ -14,7 +14,8 @@ function initTradePage() {
   }
 
   const headerMount = document.getElementById('header-mount');
-  headerMount.outerHTML = renderHeader('market');
+  headerMount.insertAdjacentHTML('beforebegin', renderHeader('market'));
+  headerMount.remove();
 
   document.addEventListener('app:userReady', () => {
     if (document.getElementById('position-info')) loadUserPosition();
@@ -206,7 +207,6 @@ async function load() {
       maximumFractionDigits: 2
     });
 
-    // Создание HTML разметки
     const tradeHTML = `
       <div class="grid">
         <div class="card">
@@ -247,7 +247,8 @@ async function load() {
     `;
 
     const contentEl = document.getElementById('trade-content');
-    contentEl.innerHTML = tradeHTML;
+    contentEl.textContent = '';
+    contentEl.insertAdjacentHTML('beforeend', tradeHTML);
 
     setupEventListeners();
 
