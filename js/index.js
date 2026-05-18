@@ -127,6 +127,10 @@ function setupEventListeners() {
 
 async function loadDashboardCharts() {
   try {
+    const user = await window.supabase.auth.getUser();
+    const userId = user?.id || user?.data?.user?.id || user?.user?.id;
+    if (!userId) return;
+
     const txRes = await api.getTransactions();
     const txs = txRes?.data || txRes || [];
 
@@ -159,20 +163,9 @@ async function loadDashboardCharts() {
       balancePoints.push(Math.max(0, runningBalance));
     }
 
-    const portfolioPoints = [0];
-    let portfolioValue = 0;
-
-    for (const tx of txs) {
-      const stock = allStocks.find(s => s.SECID === tx.ticker);
-      const currentPrice = stock?.LAST || parseFloat(tx.price);
-
-      if (tx.type === 'buy') {
-        portfolioValue += tx.quantity * currentPrice;
-      } else if (tx.type === 'sell') {
-        portfolioValue -= tx.quantity * currentPrice;
-      }
-      portfolioPoints.push(Math.max(0, portfolioValue));
-    }
+    const snapRes = await api.getPortfolioSnapshots(userId);
+    const snapshots = snapRes?.data || snapRes || [];
+    const portfolioPoints = snapshots.map(s => Number(s.total_value)).filter(Number.isFinite);
 
     if (balancePoints.length >= 2) {
       const balanceChart = document.querySelector('.cards .card:first-child .chart');
@@ -195,6 +188,7 @@ async function loadDashboardCharts() {
     console.warn('Dashboard charts load failed:', e);
   }
 }
+
 
 function initHomePage() {
   const headerMount = document.getElementById('header-mount');

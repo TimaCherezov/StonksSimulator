@@ -6,7 +6,24 @@ const api = {
       .single()
       .execute();
   },
-
+  getPortfolioSnapshots(userId) {
+    return window.supabase
+      .from("portfolio_snapshots")
+      .select("*")
+      .eq("user_id", userId)
+      .order("recorded_at", { ascending: true })
+      .execute();
+  },
+  insertPortfolioSnapshot(userId, data) {
+    return window.supabase
+      .from("portfolio_snapshots")
+      .insert({
+        user_id: userId,
+        total_value: data.total_value,
+        recorded_at: data.recorded_at || new Date().toISOString()
+      })
+      .execute();
+  },
   updateBalance(userId, balance) {
     return window.supabase
       .from("profiles")
@@ -14,11 +31,9 @@ const api = {
       .eq("id", userId)
       .execute();
   },
-
   getPortfolio() {
     return window.supabase.from("portfolio").select("*").execute();
   },
-
   async getPosition(ticker) {
     const rows = await window.supabase
       .from("portfolio")
@@ -27,14 +42,12 @@ const api = {
       .execute();
     return rows?.[0] || null;
   },
-
   insertPosition(userId, ticker, quantity, avgBuyPrice) {
     return window.supabase
       .from("portfolio")
       .insert({ user_id: userId, ticker, quantity, avg_buy_price: avgBuyPrice })
       .execute();
   },
-
   updatePosition(userId, ticker, fields) {
     return window.supabase
       .from("portfolio")
@@ -43,7 +56,6 @@ const api = {
       .eq("ticker", ticker)
       .execute();
   },
-
   deletePosition(userId, ticker) {
     return window.supabase
       .from("portfolio")
@@ -52,7 +64,6 @@ const api = {
       .eq("ticker", ticker)
       .execute();
   },
-
   getTransactions(limit) {
     const q = window.supabase
       .from("transactions")
@@ -61,7 +72,6 @@ const api = {
     if (limit) q.limit(limit);
     return q.execute();
   },
-
   insertTransaction(userId, ticker, type, quantity, price, totalAmount) {
     return window.supabase
       .from("transactions")
@@ -76,3 +86,4 @@ const api = {
       .execute();
   },
 };
+

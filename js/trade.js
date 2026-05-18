@@ -162,6 +162,7 @@ async function executeBuy(userId, qty) {
   }
 
   await api.insertTransaction(userId, ticker, 'buy', qty, stockPrice, total);
+  await savePortfolioSnapshot(userId);
 }
 
 async function executeSell(userId, qty) {
@@ -185,6 +186,7 @@ async function executeSell(userId, qty) {
   }
 
   await api.insertTransaction(userId, ticker, 'sell', qty, stockPrice, total);
+  await savePortfolioSnapshot(userId);
 }
 
 async function load() {
@@ -298,6 +300,30 @@ function setupEventListeners() {
   const cancelBtn = document.getElementById('cancel-btn');
   if (cancelBtn) {
     cancelBtn.addEventListener('click', () => history.back());
+  }
+}
+
+async function savePortfolioSnapshot(userId) {
+  try {
+    const [profile, positions] = await Promise.all([
+      api.getProfile(),
+      api.getPortfolio()
+    ]);
+
+    const cashBalance = Number(profile?.balance ?? 0);
+    const portfolioValue = (positions || []).reduce((sum, pos) => {
+      const qty = Number(pos.quantity) || 0;
+      const avg = Number(pos.avg_buy_price) || 0;
+      return sum + avg * qty;
+    }, 0);
+
+    await api.insertPortfolioSnapshot(userId, {
+      total_value: cashBalance + portfolioValue,
+      recorded_at: new Date().toISOString()
+    });
+
+  } catch (e) {
+    console.warn('snapshot failed:', e);
   }
 }
 
