@@ -12,9 +12,8 @@ const PAGE_SIZE = 20;
 function getDateThreshold() {
     const now = new Date();
     switch (dateFilter) {
-        case 'today': {
+        case 'today':
             return new Date(now.getFullYear(), now.getMonth(), now.getDate());
-        }
         case 'week':
             return new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
         case 'month':
@@ -42,31 +41,14 @@ function getFiltered() {
     const threshold = getDateThreshold();
     const ceiling = getDateCeiling();
     return allTxs.filter(t => {
-        const ticker = t.ticker || '';
         if (filterType !== 'all' && t.type !== filterType)
             return false;
-        if (q && !ticker.toUpperCase().includes(q))
+        if (q && !t.ticker.includes(q))
             return false;
         const txDate = new Date(t.created_at);
 
         return !(txDate < threshold || txDate >= ceiling);
     });
-}
-
-function getTotalPages(filtered = getFiltered()) {
-    return Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
-}
-
-function clearPagination() {
-    const paginationEl = document.getElementById('pagination');
-    if (paginationEl)
-        paginationEl.textContent = '';
-}
-
-function renderPagination(totalPages) {
-    const paginationEl = document.getElementById('pagination');
-    paginationEl.textContent = '';
-    paginationEl.insertAdjacentHTML('beforeend', buildPaginationHTML(currentPage, totalPages, 'goToPage'));
 }
 
 function renderSummary() {
@@ -102,30 +84,41 @@ function renderSummary() {
     </div>`;
 }
 
-function renderTable(filtered) {
+function renderPagination(totalPages) {
+    const paginationEl = document.getElementById('pagination');
+    if (!paginationEl)
+        return;
+    paginationEl.textContent = '';
+    const html = buildPaginationHTML(currentPage, totalPages, 'goToPage');
+    if (html)
+        paginationEl.insertAdjacentHTML('beforeend', html);
+}
+
+function renderTable() {
+    const filtered = getFiltered();
+    const totalPages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
+    if (currentPage > totalPages)
+        currentPage = 1;
+
     const page = filtered.slice((currentPage - 1) * PAGE_SIZE, currentPage * PAGE_SIZE);
 
     const rows = page.length
-        ? page.map(t => {
-            const safeTicker = esc(t.ticker);
-            const encodedTicker = encodeURIComponent(t.ticker);
-            return `
-        <tr>
-          <td class="muted">${fmtDate(t.created_at, true)}</td>
-          <td>
-            <span class="ticker-badge" onclick="filterByTicker(decodeURIComponent('${encodedTicker}'))">${safeTicker}</span>
-          </td>
-          <td class="${t.type === 'buy' ? 'badge-buy' : 'badge-sell'}">
-            ${t.type === 'buy' ? 'Покупка' : 'Продажа'}
-          </td>
-          <td class="right">${t.quantity} шт.</td>
-          <td class="right">${fmtRub(t.price)}</td>
-          <td class="right">${fmtRub(t.total_amount)}</td>
-          <td class="right">
-            <a href="trade.html?ticker=${encodedTicker}&mode=buy" style="color:#3b82f6;font-size:12px;text-decoration:none">Перейти →</a>
-          </td>
-        </tr>`;
-        }).join('')
+        ? page.map(t => `
+      <tr>
+        <td class="muted">${fmtDate(t.created_at, true)}</td>
+        <td>
+          <span class="ticker-badge" onclick="filterByTicker('${t.ticker}')">${t.ticker}</span>
+        </td>
+        <td class="${t.type === 'buy' ? 'badge-buy' : 'badge-sell'}">
+          ${t.type === 'buy' ? 'Покупка' : 'Продажа'}
+        </td>
+        <td class="right">${t.quantity} шт.</td>
+        <td class="right">${fmtRub(t.price)}</td>
+        <td class="right">${fmtRub(t.total_amount)}</td>
+        <td class="right">
+          <a href="trade.html?ticker=${t.ticker}&mode=buy" style="color:#3b82f6;font-size:12px;text-decoration:none">Перейти →</a>
+        </td>
+      </tr>`).join('')
         : `<tr><td colspan="7" class="td-empty">Нет сделок по заданным фильтрам</td></tr>`;
 
     return `
@@ -144,39 +137,37 @@ function renderTable(filtered) {
         </thead>
         <tbody>${rows}</tbody>
       </table>
-    </div>`;
+    </div>
+    <div id="pagination" class="pagination"></div>`;
 }
 
 function render() {
     const root = document.getElementById('history-root');
-
     if (!allTxs.length) {
-        root.innerHTML = `
+        root.textContent = '';
+        root.insertAdjacentHTML('beforeend', `
       <div class="table-wrap">
         <table><tbody>
           <tr><td class="td-empty">Сделок пока не было. <a href="../market.html">Перейти на рынок →</a></td></tr>
         </tbody></table>
-      </div>`;
-        clearPagination();
+      </div>`);
         return;
     }
 
+    root.textContent = '';
+    root.insertAdjacentHTML('beforeend', renderSummary() + renderControls() + renderTable());
     const filtered = getFiltered();
-    const totalPages = getTotalPages(filtered);
-    if (currentPage > totalPages)
-        currentPage = 1;
-
-    root.innerHTML = renderSummary() + renderControls() + renderTable(filtered);
+    const totalPages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
     renderPagination(totalPages);
 }
 
 function renderControls() {
-    const q = esc(searchTicker);
+    const q = searchTicker;
     return `
     <div class="controls">
       <div class="filters">
-        <button class="filter-btn ${filterType === 'all' ? 'active' : ''}" onclick="setType('all')">Все</button>
-        <button class="filter-btn ${filterType === 'buy' ? 'active' : ''}" onclick="setType('buy')">Покупки</button>
+        <button class="filter-btn ${filterType === 'all'  ? 'active' : ''}" onclick="setType('all')">Все</button>
+        <button class="filter-btn ${filterType === 'buy'  ? 'active' : ''}" onclick="setType('buy')">Покупки</button>
         <button class="filter-btn ${filterType === 'sell' ? 'active' : ''}" onclick="setType('sell')">Продажи</button>
       </div>
       <input class="search" placeholder="Тикер" value="${q}"
@@ -184,11 +175,11 @@ function renderControls() {
     </div>
     <div class="controls">
       <div class="filters">
-        <button class="filter-btn ${dateFilter === 'all' ? 'active' : ''}" onclick="setDateFilter('all')">За всё время</button>
+        <button class="filter-btn ${dateFilter === 'all'   ? 'active' : ''}" onclick="setDateFilter('all')">За всё время</button>
         <button class="filter-btn ${dateFilter === 'today' ? 'active' : ''}" onclick="setDateFilter('today')">Сегодня</button>
-        <button class="filter-btn ${dateFilter === 'week' ? 'active' : ''}" onclick="setDateFilter('week')">Последние 7 дней</button>
+        <button class="filter-btn ${dateFilter === 'week'  ? 'active' : ''}" onclick="setDateFilter('week')">Последние 7 дней</button>
         <button class="filter-btn ${dateFilter === 'month' ? 'active' : ''}" onclick="setDateFilter('month')">Последний месяц</button>
-        <button class="filter-btn ${dateFilter === 'year' ? 'active' : ''}" onclick="setDateFilter('year')">Последний год</button>
+        <button class="filter-btn ${dateFilter === 'year'  ? 'active' : ''}" onclick="setDateFilter('year')">Последний год</button>
       </div>
     </div>
     <div class="controls controls-range">
@@ -277,7 +268,8 @@ function filterByTicker(ticker) {
 }
 
 function goToPage(page) {
-    const totalPages = getTotalPages();
+    const filtered = getFiltered();
+    const totalPages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
     if (page < 1 || page > totalPages)
         return;
     currentPage = page;
@@ -287,7 +279,6 @@ function goToPage(page) {
 
 document.addEventListener('app:userLogout', () => {
     allTxs = [];
-    clearPagination();
     showLoginPrompt('history-root', 'Войдите в аккаунт, чтобы увидеть историю сделок');
 });
 
@@ -296,27 +287,27 @@ document.addEventListener('app:userReady', async function () {
         return;
     const user = await window.supabase.auth.getUser();
     if (!user) {
-        clearPagination();
         showLoginPrompt('history-root', 'Войдите в аккаунт, чтобы увидеть историю сделок');
         return;
     }
 
-    clearPagination();
-    document.getElementById('history-root').innerHTML = `
+    const root = document.getElementById('history-root');
+    root.textContent = '';
+    root.insertAdjacentHTML('beforeend', `
     <div class="table-wrap">
       <table><tbody><tr><td class="td-loading">Загрузка...</td></tr></tbody></table>
-    </div>`;
+    </div>`);
 
     try {
         const txs = await api.getTransactions();
         allTxs = txs || [];
         render();
     } catch (e) {
-        clearPagination();
-        document.getElementById('history-root').innerHTML = `
+        root.textContent = '';
+        root.insertAdjacentHTML('beforeend', `
       <div class="table-wrap">
         <table><tbody><tr><td class="td-empty">Ошибка загрузки данных</td></tr></tbody></table>
-      </div>`;
+      </div>`);
         console.error(e);
     }
 });
