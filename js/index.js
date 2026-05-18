@@ -159,20 +159,17 @@ async function loadDashboardCharts() {
       balancePoints.push(Math.max(0, runningBalance));
     }
 
-    const portfolioPoints = [0];
-    let portfolioValue = 0;
 
-    for (const tx of txs) {
-      const stock = allStocks.find(s => s.SECID === tx.ticker);
-      const currentPrice = stock?.LAST || parseFloat(tx.price);
+    // const snapRes = await api.getPortfolioSnapshots();
+    // const snapshots = snapRes?.data || snapRes || [];
+    //
+    // const portfolioPoints = snapshots.map(s => Number(s.value));
+    //
+    // if (portfolioPoints.length < 2) {
+    //   portfolioPoints.push(portfolioPoints[0] || 0);
+    // }
+    const portfolioPoints = [];
 
-      if (tx.type === 'buy') {
-        portfolioValue += tx.quantity * currentPrice;
-      } else if (tx.type === 'sell') {
-        portfolioValue -= tx.quantity * currentPrice;
-      }
-      portfolioPoints.push(Math.max(0, portfolioValue));
-    }
 
     if (balancePoints.length >= 2) {
       const balanceChart = document.querySelector('.cards .card:first-child .chart');
@@ -195,7 +192,6 @@ async function loadDashboardCharts() {
     console.warn('Dashboard charts load failed:', e);
   }
 }
-
 function initHomePage() {
   const headerMount = document.getElementById('header-mount');
   headerMount.insertAdjacentHTML('beforebegin', renderHeader('home'));

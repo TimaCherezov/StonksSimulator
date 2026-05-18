@@ -6,6 +6,25 @@ const api = {
       .single()
       .execute();
   },
+    getPortfolioSnapshots(userId) {
+        return window.supabase
+            .from("portfolio_snapshots")
+            .select("*")
+            .eq("user_id", userId)
+            .order("created_at", { ascending: true })
+            .execute();
+    },
+
+    insertPortfolioSnapshot(userId, data) {
+        return window.supabase
+            .from("portfolio_snapshots")
+            .insert({
+                user_id: userId,
+                value: data.value,
+                created_at: data.created_at || new Date().toISOString()
+            })
+            .execute();
+    },
 
   updateBalance(userId, balance) {
     return window.supabase
@@ -76,3 +95,5 @@ const api = {
       .execute();
   },
 };
+
+
