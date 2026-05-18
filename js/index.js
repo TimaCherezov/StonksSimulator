@@ -128,18 +128,17 @@ function setupEventListeners() {
 async function loadDashboardCharts() {
   try {
     const user = await window.supabase.auth.getUser();
-    const userId = user?.id || user?.data?.user?.id || user?.user?.id;
+    const userId = user?.id;
     if (!userId) return;
 
     const txRes = await api.getTransactions();
-    const txs = txRes?.data || txRes || [];
+    const txs = txRes || [];
 
     if (!txs || !txs.length) return;
 
     txs.sort((a, b) => new Date(a.created_at) - new Date(b.created_at));
 
-    const profileRes = await api.getProfile();
-    const profile = profileRes?.data || profileRes;
+    const profile = await api.getProfile();
     const currentBalance = profile?.balance || 100000;
 
     let initialBalance = currentBalance;
@@ -164,7 +163,7 @@ async function loadDashboardCharts() {
     }
 
     const snapRes = await api.getPortfolioSnapshots(userId);
-    const snapshots = snapRes?.data || snapRes || [];
+    const snapshots = snapRes || [];
     const portfolioPoints = snapshots.map(s => Number(s.total_value)).filter(Number.isFinite);
 
     if (balancePoints.length >= 2) {
@@ -172,7 +171,7 @@ async function loadDashboardCharts() {
       if (balanceChart) {
         balanceChart.style.background = 'none';
         balanceChart.classList.remove('sk');
-        renderChart(balanceChart, balancePoints, { height: 80 });
+        renderChart(balanceChart, balancePoints, { height: 200 });
       }
     }
 
@@ -181,7 +180,7 @@ async function loadDashboardCharts() {
       if (portfolioChart) {
         portfolioChart.style.background = 'none';
         portfolioChart.classList.remove('sk');
-        renderChart(portfolioChart, portfolioPoints, { height: 80 });
+        renderChart(portfolioChart, portfolioPoints, { height: 200 });
       }
     }
   } catch (e) {
