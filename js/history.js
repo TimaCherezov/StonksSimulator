@@ -228,17 +228,17 @@ function setCustomDateTo(value) {
 
 function applyCustomDateFilter() {
     if (!customDateFrom) {
-        alert('Пожалуйста, выберите дату начала периода');
+        showToast('Пожалуйста, выберите дату начала периода', 'error');
         return;
     }
 
     if (!customDateTo) {
-        alert('Пожалуйста, выберите дату конца периода');
+        showToast('Пожалуйста, выберите дату конца периода', 'error');
         return;
     }
 
     if (new Date(customDateFrom) > new Date(customDateTo)) {
-        alert('Дата начала не может быть позже даты конца');
+        showToast('Дата начала не может быть позже даты конца', 'error');
         return;
     }
 
@@ -275,6 +275,21 @@ function goToPage(page) {
     currentPage = page;
     window.scrollTo({ top: 0, behavior: 'smooth' });
     render();
+}
+
+let historyToastTimer;
+function showToast(msg, type) {
+    let el = document.getElementById('toast');
+    if (!el) {
+        el = document.createElement('div');
+        el.id = 'toast';
+        el.className = 'toast';
+        document.body.appendChild(el);
+    }
+    el.textContent = msg;
+    el.className = `toast toast-${type} show`;
+    clearTimeout(historyToastTimer);
+    historyToastTimer = setTimeout(() => el.classList.remove('show'), 3000);
 }
 
 document.addEventListener('app:userLogout', () => {
