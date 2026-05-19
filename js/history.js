@@ -7,7 +7,7 @@ let currentPage = 1;
 let dateFilter = 'all';
 let customDateFrom = '';
 let customDateTo = '';
-const PAGE_SIZE = 20;
+const PAGE_SIZE = 5;
 
 function getDateThreshold() {
     const now = new Date();
