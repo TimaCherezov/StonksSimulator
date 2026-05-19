@@ -311,11 +311,17 @@ async function savePortfolioSnapshot(userId) {
     ]);
 
     const cashBalance = Number(profile?.balance ?? 0);
-    const portfolioValue = (positions || []).reduce((sum, pos) => {
-      const qty = Number(pos.quantity) || 0;
-      const avg = Number(pos.avg_buy_price) || 0;
-      return sum + avg * qty;
-    }, 0);
+    let portfolioValue = 0;
+
+    if (positions && positions.length) {
+      for (const pos of positions) {
+        const stock = allStocks.find(s => s.SECID === pos.ticker);
+
+        const price = stock?.LAST || Number(pos.avg_buy_price) || 0;
+
+        portfolioValue += price * Number(pos.quantity);
+      }
+    }
 
     await api.insertPortfolioSnapshot(userId, {
       total_value: cashBalance + portfolioValue,
