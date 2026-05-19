@@ -10,12 +10,15 @@ const FILTERS = {
   cheap:     { label: 'Самые дешёвые акции',      sort: (a, b) => a.LAST - b.LAST },
 };
 
-function updatePortfolioCard(positions) {
+async function updatePortfolioCard(positions) {
   if (!positions || !positions.length) {
     document.getElementById('dashboard-portfolio').textContent = '0,00 ₽';
     document.getElementById('dashboard-pnl').textContent = '';
     return;
   }
+
+  const profile = await api.getProfile();
+  const cashBalance = Number(profile?.balance ?? 0);
 
   let portfolioValue = 0;
   let costBasis = 0;
@@ -27,7 +30,8 @@ function updatePortfolioCard(positions) {
     costBasis += parseFloat(pos.avg_buy_price) * pos.quantity;
   }
 
-  document.getElementById('dashboard-portfolio').textContent = fmtRub(portfolioValue);
+  const totalPortfolio = cashBalance + portfolioValue;
+  document.getElementById('dashboard-portfolio').textContent = fmtRub(totalPortfolio);
 
   const pnl = portfolioValue - costBasis;
   if (costBasis > 0) {
@@ -38,6 +42,7 @@ function updatePortfolioCard(positions) {
     pnlEl.className   = pnl >= 0 ? 'green' : 'red-text';
   }
 }
+
 
 async function loadCharts(stocks) {
   const { from, till } = weekRange();

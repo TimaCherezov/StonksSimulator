@@ -314,15 +314,17 @@ async function savePortfolioSnapshot(userId) {
     let portfolioValue = 0;
 
     if (positions && positions.length) {
+      const { securities, marketdata } = await moex.getAllStocks();
+      const allCurrentStocks = moex.merge(securities, marketdata);
+
       for (const pos of positions) {
-        const stock = allStocks.find(s => s.SECID === pos.ticker);
-
+        const stock = allCurrentStocks.find(s => s.SECID === pos.ticker);
         const price = stock?.LAST || Number(pos.avg_buy_price) || 0;
-
         portfolioValue += price * Number(pos.quantity);
       }
     }
 
+    console.log(cashBalance)
     await api.insertPortfolioSnapshot(userId, {
       total_value: cashBalance + portfolioValue,
       recorded_at: new Date().toISOString()
