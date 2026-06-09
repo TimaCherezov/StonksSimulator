@@ -9,19 +9,50 @@ let customDateFrom = '';
 let customDateTo = '';
 const PAGE_SIZE = 5;
 
+function formatDateForInput(d) {
+    const yyyy = d.getFullYear();
+    const mm = String(d.getMonth() + 1).padStart(2, '0');
+    const dd = String(d.getDate()).padStart(2, '0');
+    return `${yyyy}-${mm}-${dd}`;
+}
+
 function getDateThreshold() {
     const now = new Date();
+
     switch (dateFilter) {
         case 'today':
-            return new Date(now.getFullYear(), now.getMonth(), now.getDate());
-        case 'week':
-            return new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
-        case 'month':
-            return new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
-        case 'year':
-            return new Date(now.getTime() - 365 * 24 * 60 * 60 * 1000);
-        case 'custom':
-            return new Date(customDateFrom);
+            return new Date(
+                now.getFullYear(),
+                now.getMonth(),
+                now.getDate()
+            );
+
+        case 'week': {
+            const d = new Date(now);
+            d.setDate(d.getDate() - 7);
+            d.setHours(0, 0, 0, 0);
+            return d;
+        }
+
+        case 'month': {
+            const d = new Date(now);
+            d.setMonth(d.getMonth() - 1);
+            d.setHours(0, 0, 0, 0);
+            return d;
+        }
+
+        case 'year': {
+            const d = new Date(now);
+            d.setFullYear(d.getFullYear() - 1);
+            d.setHours(0, 0, 0, 0);
+            return d;
+        }
+
+        case 'custom': {
+            const [y, m, d] = customDateFrom.split('-').map(Number);
+            return new Date(y, m - 1, d);
+        }
+
         default:
             return new Date(0);
     }
@@ -29,7 +60,8 @@ function getDateThreshold() {
 
 function getDateCeiling() {
     if (dateFilter === 'custom' && customDateTo) {
-        const toDate = new Date(customDateTo);
+        const [y, m, d] = customDateTo.split('-').map(Number);
+        const toDate = new Date(y, m - 1, d);
         toDate.setDate(toDate.getDate() + 1);
         return toDate;
     }
@@ -212,9 +244,24 @@ function setType(type) {
 
 function setDateFilter(period) {
     dateFilter = period;
-    customDateFrom = '';
-    customDateTo = '';
     currentPage = 1;
+
+    if (period === 'all') {
+        customDateFrom = '';
+        customDateTo = '';
+    } else if (period === 'custom') {
+        // Пользователь сам выставляет - не трогаем ничего
+    } else {
+        const from = getDateThreshold();
+        const ceiling = getDateCeiling();
+
+        const toDay = new Date(ceiling.getFullYear(), ceiling.getMonth(), ceiling.getDate());
+        customDateFrom = isFinite(from.getTime())
+            ? formatDateForInput(new Date(from.getFullYear(), from.getMonth(), from.getDate()))
+            : '';
+        customDateTo = formatDateForInput(toDay);
+    }
+
     render();
 }
 
