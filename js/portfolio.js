@@ -1,4 +1,4 @@
-document.getElementById('header-mount').outerHTML = renderHeader('portfolio');
+document.getElementById("header-mount").outerHTML = renderHeader("portfolio");
 
 const moex = new MoexClient();
 
@@ -7,13 +7,12 @@ let positionsCurrentPage = 1;
 const PAGE_SIZE = 5;
 
 function renderSummary(balance, portfolioValue, pnl, totalAssets) {
-    const pnlClass = pnl >= 0 ? 'green' : 'red';
-    const pnlSign  = pnl >= 0 ? '+' : '';
-    const pnlPct   = portfolioValue > 0
-        ? fmtPct((pnl / (portfolioValue - pnl)) * 100)
-        : '0.00%';
+  const pnlClass = pnl >= 0 ? "green" : "red";
+  const pnlSign = pnl >= 0 ? "+" : "";
+  const pnlPct =
+    portfolioValue > 0 ? fmtPct((pnl / (portfolioValue - pnl)) * 100) : "0.00%";
 
-    return `
+  return `
     <div class="summary-grid">
       <div class="summary-card">
         <div class="summary-label">Свободные средства</div>
@@ -36,31 +35,34 @@ function renderSummary(balance, portfolioValue, pnl, totalAssets) {
 }
 
 function getFilteredPositions() {
-    return positionsAll.slice();
+  return positionsAll.slice();
 }
 
 function renderPositions() {
-    const positions = getFilteredPositions();
-    if (!positions.length) {
-        return `
+  const positions = getFilteredPositions();
+  if (!positions.length) {
+    return `
       <h2>Открытые позиции</h2>
       <div class="table-wrap">
         <table><tbody>
-          <tr><td class="td-empty">У вас пока нет акций. <a href="../market.html">Перейти на рынок →</a></td></tr>
+          <tr><td class="td-empty">У вас пока нет акций. <a href="market.html">Перейти на рынок →</a></td></tr>
         </tbody></table>
       </div>`;
-    }
+  }
 
-    const totalPages = Math.max(1, Math.ceil(positions.length / PAGE_SIZE));
-    if (positionsCurrentPage > totalPages)
-        positionsCurrentPage = 1;
+  const totalPages = Math.max(1, Math.ceil(positions.length / PAGE_SIZE));
+  if (positionsCurrentPage > totalPages) positionsCurrentPage = 1;
 
-    const page = positions.slice((positionsCurrentPage - 1) * PAGE_SIZE, positionsCurrentPage * PAGE_SIZE);
+  const page = positions.slice(
+    (positionsCurrentPage - 1) * PAGE_SIZE,
+    positionsCurrentPage * PAGE_SIZE,
+  );
 
-    const rows = page.map(p => {
-        const pnlClass = p.pnl >= 0 ? 'green' : 'red';
-        const pnlSign  = p.pnl >= 0 ? '+' : '';
-        return `
+  const rows = page
+    .map((p) => {
+      const pnlClass = p.pnl >= 0 ? "green" : "red";
+      const pnlSign = p.pnl >= 0 ? "+" : "";
+      return `
       <tr>
         <td class="ticker-cell">
           <strong>${p.name}</strong>
@@ -79,9 +81,10 @@ function renderPositions() {
           </div>
         </td>
       </tr>`;
-    }).join('');
+    })
+    .join("");
 
-    return `
+  return `
     <h2>Открытые позиции</h2>
     <div class="table-wrap">
       <table>
@@ -104,134 +107,154 @@ function renderPositions() {
 }
 
 function renderPositionsPagination(totalPages) {
-    const paginationEl = document.getElementById('positions-pagination');
-    if (!paginationEl)
-        return;
-    paginationEl.textContent = '';
-    const html = buildPaginationHTML(positionsCurrentPage, totalPages, 'goToPositionsPage');
-    if (html)
-        paginationEl.insertAdjacentHTML('beforeend', html);
+  const paginationEl = document.getElementById("positions-pagination");
+  if (!paginationEl) return;
+  paginationEl.textContent = "";
+  const html = buildPaginationHTML(
+    positionsCurrentPage,
+    totalPages,
+    "goToPositionsPage",
+  );
+  if (html) paginationEl.insertAdjacentHTML("beforeend", html);
 }
 
 function goToPositionsPage(page) {
-    const filtered = getFilteredPositions();
-    const totalPages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
-    if (page < 1 || page > totalPages)
-        return;
-    positionsCurrentPage = page;
-    window.scrollTo({ top: 0, behavior: 'smooth' });
+  const filtered = getFilteredPositions();
+  const totalPages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
+  if (page < 1 || page > totalPages) return;
+  positionsCurrentPage = page;
+  window.scrollTo({ top: 0, behavior: "smooth" });
 
-    const root = document.getElementById('portfolio-root');
-    if (!root)
-        return;
+  const root = document.getElementById("portfolio-root");
+  if (!root) return;
 
-    const balance = parseFloat(window.__portfolio_balance || 0);
-    const portfolioValue = positionsAll.reduce((s, p) => s + (p.currentValue || 0), 0);
-    const totalPnl = positionsAll.reduce((s, p) => s + (p.pnl || 0), 0);
-    const totalAssets = balance + portfolioValue;
+  const balance = parseFloat(window.__portfolio_balance || 0);
+  const portfolioValue = positionsAll.reduce(
+    (s, p) => s + (p.currentValue || 0),
+    0,
+  );
+  const totalPnl = positionsAll.reduce((s, p) => s + (p.pnl || 0), 0);
+  const totalAssets = balance + portfolioValue;
 
-    root.textContent = '';
-    root.insertAdjacentHTML('beforeend',
-        renderSummary(balance, portfolioValue, totalPnl, totalAssets) +
-        renderPositions()
-    );
+  root.textContent = "";
+  root.insertAdjacentHTML(
+    "beforeend",
+    renderSummary(balance, portfolioValue, totalPnl, totalAssets) +
+      renderPositions(),
+  );
 
-    renderPositionsPagination(totalPages);
+  renderPositionsPagination(totalPages);
 }
 
 function showLoading() {
-    const root = document.getElementById('portfolio-root');
-    if (!root)
-        return;
-    root.textContent = '';
-    root.insertAdjacentHTML('beforeend', `
+  const root = document.getElementById("portfolio-root");
+  if (!root) return;
+  root.textContent = "";
+  root.insertAdjacentHTML(
+    "beforeend",
+    `
     <div class="table-wrap">
       <table><tbody>
         <tr><td class="td-loading">Загрузка...</td></tr>
       </tbody></table>
-    </div>`);
+    </div>`,
+  );
 }
 
-document.addEventListener('app:userReady', loadPortfolio);
-document.addEventListener('app:userLogout', () =>
-    showLoginPrompt('portfolio-root', 'Войдите в аккаунт, чтобы увидеть свой портфель')
+document.addEventListener("app:userReady", loadPortfolio);
+document.addEventListener("app:userLogout", () =>
+  showLoginPrompt(
+    "portfolio-root",
+    "Войдите в аккаунт, чтобы увидеть свой портфель",
+  ),
 );
 
 async function loadPortfolio() {
-    if (!window.supabase)
-        return;
+  if (!window.supabase) return;
 
-    const user = await window.supabase.auth.getUser();
-    if (!user) {
-        showLoginPrompt('portfolio-root', 'Войдите в аккаунт, чтобы увидеть свой портфель');
-        return;
+  const user = await window.supabase.auth.getUser();
+  if (!user) {
+    showLoginPrompt(
+      "portfolio-root",
+      "Войдите в аккаунт, чтобы увидеть свой портфель",
+    );
+    return;
+  }
+
+  showLoading();
+
+  try {
+    const [posRes, profRes, moexRes] = await Promise.allSettled([
+      api.getPortfolio(),
+      api.getProfile(),
+      moex.getAllStocks(),
+    ]);
+
+    if (posRes.status === "rejected") throw posRes.reason;
+    if (profRes.status === "rejected") throw profRes.reason;
+
+    const positions = posRes.value || [];
+    const profile = profRes.value;
+
+    let stockMap = new Map();
+    if (moexRes.status === "fulfilled") {
+      const moexData = moexRes.value;
+      stockMap = new Map(
+        moex
+          .merge(moexData.securities, moexData.marketdata)
+          .map((s) => [s.SECID, s]),
+      );
+    } else {
+      console.error("MOEX unavailable:", moexRes.reason);
     }
 
-    showLoading();
+    const enriched = positions.map((p) => {
+      const stock = stockMap.get(p.ticker);
+      const currentPrice = stock?.LAST || parseFloat(p.avg_buy_price);
+      const avgPrice = parseFloat(p.avg_buy_price);
+      const currentValue = currentPrice * p.quantity;
+      const costBasis = avgPrice * p.quantity;
+      const pnl = currentValue - costBasis;
+      const pnlPct = costBasis > 0 ? (pnl / costBasis) * 100 : 0;
+      return {
+        ...p,
+        name: stock?.SHORTNAME || p.ticker,
+        currentPrice,
+        currentValue,
+        pnl,
+        pnlPct,
+      };
+    });
 
-    try {
-        const [posRes, profRes, moexRes] = await Promise.allSettled([
-            api.getPortfolio(),
-            api.getProfile(),
-            moex.getAllStocks(),
-        ]);
+    positionsAll = enriched;
+    window.__portfolio_balance = parseFloat(profile?.balance || 0);
 
-        if (posRes.status === 'rejected')
-            throw posRes.reason;
-        if (profRes.status === 'rejected')
-            throw profRes.reason;
+    const balance = parseFloat(profile?.balance || 0);
+    const portfolioValue = enriched.reduce((s, p) => s + p.currentValue, 0);
+    const totalPnl = enriched.reduce((s, p) => s + p.pnl, 0);
+    const totalAssets = balance + portfolioValue;
 
-        const positions = posRes.value || [];
-        const profile = profRes.value;
+    const root = document.getElementById("portfolio-root");
+    if (!root) return;
+    root.textContent = "";
+    root.insertAdjacentHTML(
+      "beforeend",
+      renderSummary(balance, portfolioValue, totalPnl, totalAssets) +
+        renderPositions(),
+    );
 
-        let stockMap = new Map();
-        if (moexRes.status === 'fulfilled') {
-            const moexData = moexRes.value;
-            stockMap = new Map(
-                moex.merge(moexData.securities, moexData.marketdata).map(s => [s.SECID, s])
-            );
-        } else {
-            console.error('MOEX unavailable:', moexRes.reason);
-        }
-
-        const enriched = positions.map(p => {
-            const stock        = stockMap.get(p.ticker);
-            const currentPrice = stock?.LAST || parseFloat(p.avg_buy_price);
-            const avgPrice     = parseFloat(p.avg_buy_price);
-            const currentValue = currentPrice * p.quantity;
-            const costBasis    = avgPrice * p.quantity;
-            const pnl          = currentValue - costBasis;
-            const pnlPct       = costBasis > 0 ? (pnl / costBasis) * 100 : 0;
-            return { ...p, name: stock?.SHORTNAME || p.ticker, currentPrice, currentValue, pnl, pnlPct };
-        });
-
-        positionsAll = enriched;
-        window.__portfolio_balance = parseFloat(profile?.balance || 0);
-
-        const balance        = parseFloat(profile?.balance || 0);
-        const portfolioValue = enriched.reduce((s, p) => s + p.currentValue, 0);
-        const totalPnl       = enriched.reduce((s, p) => s + p.pnl, 0);
-        const totalAssets    = balance + portfolioValue;
-
-        const root = document.getElementById('portfolio-root');
-        if (!root)
-            return;
-        root.textContent = '';
-        root.insertAdjacentHTML('beforeend',
-            renderSummary(balance, portfolioValue, totalPnl, totalAssets) +
-            renderPositions()
-        );
-
-        const totalPages = Math.max(1, Math.ceil(positionsAll.length / PAGE_SIZE));
-        renderPositionsPagination(totalPages);
-
-    } catch (e) {
-        const root = document.getElementById('portfolio-root');
-        if (root) {
-            root.textContent = '';
-            root.insertAdjacentHTML('beforeend',
-                '<div class="table-wrap"><table><tbody><tr><td class="td-empty">Ошибка загрузки данных</td></tr></tbody></table></div>');
-        }
-        console.error(e);
+    const totalPages = Math.max(1, Math.ceil(positionsAll.length / PAGE_SIZE));
+    renderPositionsPagination(totalPages);
+  } catch (e) {
+    const root = document.getElementById("portfolio-root");
+    if (root) {
+      root.textContent = "";
+      root.insertAdjacentHTML(
+        "beforeend",
+        '<div class="table-wrap"><table><tbody><tr><td class="td-empty">Ошибка загрузки данных</td></tr></tbody></table></div>',
+      );
     }
+    console.error(e);
+  }
 }
+
