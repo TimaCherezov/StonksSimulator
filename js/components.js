@@ -21,7 +21,7 @@ function renderHeader(activePage) {
 
   return `
     <header>
-      <div class="logo">📈 StonksSimulator</div>
+      <div class="logo">StonksSimulator</div>
       <nav>${links}</nav>
       <div class="header-right">
         <div class="profile" id="profile-info" style="display:none">

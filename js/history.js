@@ -1,93 +1,95 @@
-document.getElementById("header-mount").outerHTML = renderHeader("history");
+document.getElementById('header-mount').outerHTML = renderHeader('history');
 
 let allTxs = [];
-let filterType = "all";
-let searchTicker = "";
+let filterType = 'all';
+let searchTicker = '';
 let currentPage = 1;
-let dateFilter = "all";
-let customDateFrom = "";
-let customDateTo = "";
+let dateFilter = 'all';
+let customDateFrom = '';
+let customDateTo = '';
 const PAGE_SIZE = 5;
 
 function formatDateForInput(d) {
-  const yyyy = d.getFullYear();
-  const mm = String(d.getMonth() + 1).padStart(2, "0");
-  const dd = String(d.getDate()).padStart(2, "0");
-  return `${yyyy}-${mm}-${dd}`;
+    const yyyy = d.getFullYear();
+    const mm = String(d.getMonth() + 1).padStart(2, '0');
+    const dd = String(d.getDate()).padStart(2, '0');
+    return `${yyyy}-${mm}-${dd}`;
 }
 
 function getDateThreshold() {
-  const now = new Date();
+    const now = new Date();
 
-  switch (dateFilter) {
-    case "today":
-      return new Date(now.getFullYear(), now.getMonth(), now.getDate());
+    switch (dateFilter) {
+        case 'today':
+            return new Date(
+                now.getFullYear(),
+                now.getMonth(),
+                now.getDate()
+            );
 
-    case "week": {
-      const d = new Date(now);
-      d.setDate(d.getDate() - 7);
-      d.setHours(0, 0, 0, 0);
-      return d;
+        case 'week': {
+            const d = new Date(now);
+            d.setDate(d.getDate() - 7);
+            d.setHours(0, 0, 0, 0);
+            return d;
+        }
+
+        case 'month': {
+            const d = new Date(now);
+            d.setMonth(d.getMonth() - 1);
+            d.setHours(0, 0, 0, 0);
+            return d;
+        }
+
+        case 'year': {
+            const d = new Date(now);
+            d.setFullYear(d.getFullYear() - 1);
+            d.setHours(0, 0, 0, 0);
+            return d;
+        }
+
+        case 'custom': {
+            const [y, m, d] = customDateFrom.split('-').map(Number);
+            return new Date(y, m - 1, d);
+        }
+
+        default:
+            return new Date(0);
     }
-
-    case "month": {
-      const d = new Date(now);
-      d.setMonth(d.getMonth() - 1);
-      d.setHours(0, 0, 0, 0);
-      return d;
-    }
-
-    case "year": {
-      const d = new Date(now);
-      d.setFullYear(d.getFullYear() - 1);
-      d.setHours(0, 0, 0, 0);
-      return d;
-    }
-
-    case "custom": {
-      const [y, m, d] = customDateFrom.split("-").map(Number);
-      return new Date(y, m - 1, d);
-    }
-
-    default:
-      return new Date(0);
-  }
 }
 
 function getDateCeiling() {
-  if (dateFilter === "custom" && customDateTo) {
-    const [y, m, d] = customDateTo.split("-").map(Number);
-    const toDate = new Date(y, m - 1, d);
-    toDate.setDate(toDate.getDate() + 1);
-    return toDate;
-  }
-  return new Date();
+    if (dateFilter === 'custom' && customDateTo) {
+        const [y, m, d] = customDateTo.split('-').map(Number);
+        const toDate = new Date(y, m - 1, d);
+        toDate.setDate(toDate.getDate() + 1);
+        return toDate;
+    }
+    return new Date();
 }
 
 function getFiltered() {
-  const q = searchTicker.trim().toUpperCase();
-  const threshold = getDateThreshold();
-  const ceiling = getDateCeiling();
-  return allTxs.filter((t) => {
-    if (filterType !== "all" && t.type !== filterType) return false;
-    if (q && !t.ticker.includes(q)) return false;
-    const txDate = new Date(t.created_at);
+    const q = searchTicker.trim().toUpperCase();
+    const threshold = getDateThreshold();
+    const ceiling = getDateCeiling();
+    return allTxs.filter(t => {
+        if (filterType !== 'all' && t.type !== filterType)
+            return false;
+        if (q && !t.ticker.includes(q))
+            return false;
+        const txDate = new Date(t.created_at);
 
-    return !(txDate < threshold || txDate >= ceiling);
-  });
+        return !(txDate < threshold || txDate >= ceiling);
+    });
 }
 
 function renderSummary() {
-  const buys = allTxs.filter((t) => t.type === "buy");
-  const sells = allTxs.filter((t) => t.type === "sell");
-  const totalBought = buys.reduce((s, t) => s + parseFloat(t.total_amount), 0);
-  const totalSold = sells.reduce((s, t) => s + parseFloat(t.total_amount), 0);
+    const buys = allTxs.filter(t => t.type === 'buy');
+    const sells = allTxs.filter(t => t.type === 'sell');
+    const totalBought = buys.reduce((s, t) => s + parseFloat(t.total_amount), 0);
+    const totalSold = sells.reduce((s, t) => s + parseFloat(t.total_amount), 0);
 
-  const realized = totalSold - totalBought;
-  const realizedClass = realized >= 0 ? "green" : "red";
-  const realizedSign = realized >= 0 ? "+" : "";
-
-  return `
+    return `
     <div class="summary-grid">
       <div class="summary-card">
         <div class="summary-label">Всего сделок</div>
@@ -103,42 +105,36 @@ function renderSummary() {
         <div class="summary-value">${sells.length}</div>
         <div class="muted">${fmtRub(totalSold)}</div>
       </div>
-      <div class="summary-card">
-        <div class="summary-label">Реализованный P&amp;L</div>
-        <div class="summary-value ${realizedClass}">${realizedSign}${fmtRub(realized)}</div>
-      </div>
     </div>`;
 }
 
 function renderPagination(totalPages) {
-  const paginationEl = document.getElementById("pagination");
-  if (!paginationEl) return;
-  paginationEl.textContent = "";
-  const html = buildPaginationHTML(currentPage, totalPages, "goToPage");
-  if (html) paginationEl.insertAdjacentHTML("beforeend", html);
+    const paginationEl = document.getElementById('pagination');
+    if (!paginationEl)
+        return;
+    paginationEl.textContent = '';
+    const html = buildPaginationHTML(currentPage, totalPages, 'goToPage');
+    if (html)
+        paginationEl.insertAdjacentHTML('beforeend', html);
 }
 
 function renderTable() {
-  const filtered = getFiltered();
-  const totalPages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
-  if (currentPage > totalPages) currentPage = 1;
+    const filtered = getFiltered();
+    const totalPages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
+    if (currentPage > totalPages)
+        currentPage = 1;
 
-  const page = filtered.slice(
-    (currentPage - 1) * PAGE_SIZE,
-    currentPage * PAGE_SIZE,
-  );
+    const page = filtered.slice((currentPage - 1) * PAGE_SIZE, currentPage * PAGE_SIZE);
 
-  const rows = page.length
-    ? page
-        .map(
-          (t) => `
+    const rows = page.length
+        ? page.map(t => `
       <tr>
         <td class="muted">${fmtDate(t.created_at, true)}</td>
         <td>
           <span class="ticker-badge" onclick="filterByTicker('${t.ticker}')">${t.ticker}</span>
         </td>
-        <td class="${t.type === "buy" ? "badge-buy" : "badge-sell"}">
-          ${t.type === "buy" ? "Покупка" : "Продажа"}
+        <td class="${t.type === 'buy' ? 'badge-buy' : 'badge-sell'}">
+          ${t.type === 'buy' ? 'Покупка' : 'Продажа'}
         </td>
         <td class="right">${t.quantity} шт.</td>
         <td class="right">${fmtRub(t.price)}</td>
@@ -146,12 +142,10 @@ function renderTable() {
         <td class="right">
           <a href="trade.html?ticker=${t.ticker}&mode=buy" style="color:#3b82f6;font-size:12px;text-decoration:none">Перейти →</a>
         </td>
-      </tr>`,
-        )
-        .join("")
-    : `<tr><td colspan="7" class="td-empty">Нет сделок по заданным фильтрам</td></tr>`;
+      </tr>`).join('')
+        : `<tr><td colspan="7" class="td-empty">Нет сделок по заданным фильтрам</td></tr>`;
 
-  return `
+    return `
     <div class="table-wrap">
       <table>
         <thead>
@@ -172,225 +166,215 @@ function renderTable() {
 }
 
 function render() {
-  const root = document.getElementById("history-root");
-  if (!allTxs.length) {
-    root.textContent = "";
-    root.insertAdjacentHTML(
-      "beforeend",
-      `
+    const root = document.getElementById('history-root');
+    if (!allTxs.length) {
+        root.textContent = '';
+        root.insertAdjacentHTML('beforeend', `
       <div class="table-wrap">
         <table><tbody>
           <tr><td class="td-empty">Сделок пока не было. <a href="market.html">Перейти на рынок →</a></td></tr>
         </tbody></table>
-      </div>`,
-    );
-    return;
-  }
+      </div>`);
+        return;
+    }
 
-  root.textContent = "";
-  root.insertAdjacentHTML(
-    "beforeend",
-    renderSummary() + renderControls() + renderTable(),
-  );
-  const filtered = getFiltered();
-  const totalPages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
-  renderPagination(totalPages);
+    root.textContent = '';
+    root.insertAdjacentHTML('beforeend', renderSummary() + renderControls() + `<div id="table-region">${renderTable()}</div>`);
+    const filtered = getFiltered();
+    const totalPages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
+    renderPagination(totalPages);
+}
+
+function renderTableRegion() {
+    const region = document.getElementById('table-region');
+    if (!region) {
+        render();
+        return;
+    }
+    region.textContent = '';
+    region.insertAdjacentHTML('beforeend', renderTable());
+    const filtered = getFiltered();
+    const totalPages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
+    renderPagination(totalPages);
 }
 
 function renderControls() {
-  const q = searchTicker;
-  return `
+    const q = searchTicker;
+    return `
     <div class="controls">
       <div class="filters">
-        <button class="filter-btn ${filterType === "all" ? "active" : ""}" onclick="setType('all')">Все</button>
-        <button class="filter-btn ${filterType === "buy" ? "active" : ""}" onclick="setType('buy')">Покупки</button>
-        <button class="filter-btn ${filterType === "sell" ? "active" : ""}" onclick="setType('sell')">Продажи</button>
+        <button class="filter-btn ${filterType === 'all'  ? 'active' : ''}" onclick="setType('all')">Все</button>
+        <button class="filter-btn ${filterType === 'buy'  ? 'active' : ''}" onclick="setType('buy')">Покупки</button>
+        <button class="filter-btn ${filterType === 'sell' ? 'active' : ''}" onclick="setType('sell')">Продажи</button>
       </div>
       <input class="search" placeholder="Тикер" value="${q}"
              oninput="handleSearch(this.value)" />
     </div>
     <div class="controls">
       <div class="filters">
-        <button class="filter-btn ${dateFilter === "all" ? "active" : ""}" onclick="setDateFilter('all')">За всё время</button>
-        <button class="filter-btn ${dateFilter === "today" ? "active" : ""}" onclick="setDateFilter('today')">Сегодня</button>
-        <button class="filter-btn ${dateFilter === "week" ? "active" : ""}" onclick="setDateFilter('week')">Последние 7 дней</button>
-        <button class="filter-btn ${dateFilter === "month" ? "active" : ""}" onclick="setDateFilter('month')">Последний месяц</button>
-        <button class="filter-btn ${dateFilter === "year" ? "active" : ""}" onclick="setDateFilter('year')">Последний год</button>
+        <button class="filter-btn ${dateFilter === 'all'   ? 'active' : ''}" onclick="setDateFilter('all')">За всё время</button>
+        <button class="filter-btn ${dateFilter === 'today' ? 'active' : ''}" onclick="setDateFilter('today')">Сегодня</button>
+        <button class="filter-btn ${dateFilter === 'week'  ? 'active' : ''}" onclick="setDateFilter('week')">Последние 7 дней</button>
+        <button class="filter-btn ${dateFilter === 'month' ? 'active' : ''}" onclick="setDateFilter('month')">Последний месяц</button>
+        <button class="filter-btn ${dateFilter === 'year'  ? 'active' : ''}" onclick="setDateFilter('year')">Последний год</button>
       </div>
     </div>
     <div class="controls controls-range">
       <div class="date-range-group">
         <label>Период</label>
         <div class="date-range-inputs">
-          <input type="date" class="date-input ${dateFilter === "custom" ? "active" : ""}"
+          <input type="date" class="date-input ${dateFilter === 'custom' ? 'active' : ''}"
                  value="${customDateFrom}"
                  oninput="setCustomDateFrom(this.value)"
                  placeholder="От">
           <span class="date-separator">→</span>
-          <input type="date" class="date-input ${dateFilter === "custom" ? "active" : ""}"
+          <input type="date" class="date-input ${dateFilter === 'custom' ? 'active' : ''}"
                  value="${customDateTo}"
                  oninput="setCustomDateTo(this.value)"
                  placeholder="До">
-          <button class="filter-btn ${dateFilter === "custom" && customDateFrom ? "active" : ""}"
+          <button class="filter-btn ${dateFilter === 'custom' && customDateFrom ? 'active' : ''}"
                   onclick="applyCustomDateFilter()"
                   style="margin-left: 8px;">Применить</button>
-          ${dateFilter === "custom" ? '<button class="filter-btn" onclick="clearCustomDateFilter()" style="margin-left: 4px; background: #8b5cf6;">Очистить</button>' : ""}
+          ${dateFilter === 'custom' ? '<button class="filter-btn" onclick="clearCustomDateFilter()" style="margin-left: 4px; background: #8b5cf6;">Очистить</button>' : ''}
         </div>
       </div>
     </div>`;
 }
 
 function setType(type) {
-  filterType = type;
-  currentPage = 1;
-  render();
+    filterType = type;
+    currentPage = 1;
+    render();
 }
 
 function setDateFilter(period) {
-  dateFilter = period;
-  currentPage = 1;
+    dateFilter = period;
+    currentPage = 1;
 
-  if (period === "all") {
-    customDateFrom = "";
-    customDateTo = "";
-  } else if (period === "custom") {
-    // Пользователь сам выставляет - не трогаем ничего
-  } else {
-    const from = getDateThreshold();
-    const ceiling = getDateCeiling();
+    if (period === 'all') {
+        customDateFrom = '';
+        customDateTo = '';
+    } else if (period === 'custom') {
+        // Пользователь сам выставляет - не трогаем ничего
+    } else {
+        const from = getDateThreshold();
+        const ceiling = getDateCeiling();
 
-    const toDay = new Date(
-      ceiling.getFullYear(),
-      ceiling.getMonth(),
-      ceiling.getDate(),
-    );
-    customDateFrom = isFinite(from.getTime())
-      ? formatDateForInput(
-          new Date(from.getFullYear(), from.getMonth(), from.getDate()),
-        )
-      : "";
-    customDateTo = formatDateForInput(toDay);
-  }
+        const toDay = new Date(ceiling.getFullYear(), ceiling.getMonth(), ceiling.getDate());
+        customDateFrom = isFinite(from.getTime())
+            ? formatDateForInput(new Date(from.getFullYear(), from.getMonth(), from.getDate()))
+            : '';
+        customDateTo = formatDateForInput(toDay);
+    }
 
-  render();
+    render();
 }
 
 function setCustomDateFrom(value) {
-  customDateFrom = value;
+    customDateFrom = value;
 }
 
 function setCustomDateTo(value) {
-  customDateTo = value;
+    customDateTo = value;
 }
 
 function applyCustomDateFilter() {
-  if (!customDateFrom) {
-    showToast("Пожалуйста, выберите дату начала периода", "error");
-    return;
-  }
+    if (!customDateFrom) {
+        showToast('Пожалуйста, выберите дату начала периода', 'error');
+        return;
+    }
 
-  if (!customDateTo) {
-    showToast("Пожалуйста, выберите дату конца периода", "error");
-    return;
-  }
+    if (!customDateTo) {
+        showToast('Пожалуйста, выберите дату конца периода', 'error');
+        return;
+    }
 
-  if (new Date(customDateFrom) > new Date(customDateTo)) {
-    showToast("Дата начала не может быть позже даты конца", "error");
-    return;
-  }
+    if (new Date(customDateFrom) > new Date(customDateTo)) {
+        showToast('Дата начала не может быть позже даты конца', 'error');
+        return;
+    }
 
-  dateFilter = "custom";
-  currentPage = 1;
-  render();
+    dateFilter = 'custom';
+    currentPage = 1;
+    render();
 }
 
 function clearCustomDateFilter() {
-  dateFilter = "all";
-  customDateFrom = "";
-  customDateTo = "";
-  currentPage = 1;
-  render();
+    dateFilter = 'all';
+    customDateFrom = '';
+    customDateTo = '';
+    currentPage = 1;
+    render();
 }
 
 function handleSearch(value) {
-  searchTicker = value;
-  currentPage = 1;
-  render();
+    searchTicker = value;
+    currentPage = 1;
+    renderTableRegion();
 }
 
 function filterByTicker(ticker) {
-  searchTicker = ticker;
-  currentPage = 1;
-  render();
+    searchTicker = ticker;
+    currentPage = 1;
+    render();
 }
 
 function goToPage(page) {
-  const filtered = getFiltered();
-  const totalPages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
-  if (page < 1 || page > totalPages) return;
-  currentPage = page;
-  window.scrollTo({ top: 0, behavior: "smooth" });
-  render();
+    const filtered = getFiltered();
+    const totalPages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
+    if (page < 1 || page > totalPages)
+        return;
+    currentPage = page;
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+    render();
 }
 
 let historyToastTimer;
 function showToast(msg, type) {
-  let el = document.getElementById("toast");
-  if (!el) {
-    el = document.createElement("div");
-    el.id = "toast";
-    el.className = "toast";
-    document.body.appendChild(el);
-  }
-  el.textContent = msg;
-  el.className = `toast toast-${type} show`;
-  clearTimeout(historyToastTimer);
-  historyToastTimer = setTimeout(() => el.classList.remove("show"), 3000);
+    let el = document.getElementById('toast');
+    if (!el) {
+        el = document.createElement('div');
+        el.id = 'toast';
+        el.className = 'toast';
+        document.body.appendChild(el);
+    }
+    el.textContent = msg;
+    el.className = `toast toast-${type} show`;
+    clearTimeout(historyToastTimer);
+    historyToastTimer = setTimeout(() => el.classList.remove('show'), 3000);
 }
 
-document.addEventListener("app:userLogout", () => {
-  allTxs = [];
-  showLoginPrompt(
-    "history-root",
-    "Войдите в аккаунт, чтобы увидеть историю сделок",
-  );
+document.addEventListener('app:userLogout', () => {
+    allTxs = [];
+    showLoginPrompt('history-root', 'Войдите в аккаунт, чтобы увидеть историю сделок');
 });
 
-document.addEventListener("app:userReady", async function () {
-  if (!window.supabase) return;
-  const user = await window.supabase.auth.getUser();
-  if (!user) {
-    showLoginPrompt(
-      "history-root",
-      "Войдите в аккаунт, чтобы увидеть историю сделок",
-    );
-    return;
-  }
+document.addEventListener('app:userReady', async function () {
+    if (!window.supabase)
+        return;
+    const user = await window.supabase.auth.getUser();
+    if (!user) {
+        showLoginPrompt('history-root', 'Войдите в аккаунт, чтобы увидеть историю сделок');
+        return;
+    }
 
-  const root = document.getElementById("history-root");
-  root.textContent = "";
-  root.insertAdjacentHTML(
-    "beforeend",
-    `
+    const root = document.getElementById('history-root');
+    root.textContent = '';
+    root.insertAdjacentHTML('beforeend', `
     <div class="table-wrap">
       <table><tbody><tr><td class="td-loading">Загрузка...</td></tr></tbody></table>
-    </div>`,
-  );
+    </div>`);
 
-  try {
-    const txs = await api.getTransactions();
-    allTxs = txs || [];
-    render();
-  } catch (e) {
-    root.textContent = "";
-    root.insertAdjacentHTML(
-      "beforeend",
-      `
+    try {
+        const txs = await api.getTransactions();
+        allTxs = txs || [];
+        render();
+    } catch (e) {
+        root.textContent = '';
+        root.insertAdjacentHTML('beforeend', `
       <div class="table-wrap">
         <table><tbody><tr><td class="td-empty">Ошибка загрузки данных</td></tr></tbody></table>
-      </div>`,
-    );
-    console.error(e);
-  }
+      </div>`);
+        console.error(e);
+    }
 });
-
